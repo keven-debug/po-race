@@ -1,0 +1,2204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The PO Race — Axya booth game</title>
+<style>
+  :root{
+    /* legacy world */
+    --erp-chrome:#c9ced6;
+    --erp-chrome-hi:#e3e7ec;
+    --erp-title:#1f3864;
+    --erp-grid:#ffffff;
+    --erp-zebra:#eef1f6;
+    --erp-line:#98a2b0;
+    --erp-line-soft:#c2c9d3;
+    --erp-text:#15181c;
+    --erp-sel:#2b5797;
+    --erp-alert:#9c1006;
+    /* axya world */
+    --ax-canvas:#FAFAF8;
+    --ax-ink:#14181C;
+    --ax-mute:#6B7280;
+    --ax-accent:#4B3BFF;
+    --ax-accent-soft:#EEEBFF;
+    --ax-revise:#B4342A;
+    --ax-revise-soft:#FBEDEB;
+    --ax-rule:#E3E2DD;
+    /* Axya brand system */
+    --blue:#2682FD;
+    --bblue:#EBF3FF;
+    --grey:#F4F4F8;
+    --dark:#12123A;
+    --mid:#4A4A6A;
+    --muted:#9090B0;
+    --green:#22C55E;
+    --orange:#E07030;
+    --warn-bg:#FFF7ED;
+    --warn-bd:#FED7AA;
+    --succ-bg:#F0FBF4;
+    --succ-bd:#86EFAC;
+    --red:#DC2626;
+    --red-bg:#FEF2F2;
+    --red-bd:#FECACA;
+    --card-bd:#E4E4F0;
+    --divider:#D8D8EC;
+    --divider-blue:#C8D8F8;
+    --brandfont:"Google Sans Flex","Google Sans",ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:#FFFFFF; color:var(--dark);
+    font-family:var(--brandfont);
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{height:100vh;overflow:hidden;display:flex;flex-direction:column}
+  button{font:inherit;cursor:pointer}
+  button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--ax-accent);outline-offset:1px}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+  /* ============ BRAND SCREENS ============ */
+  .stage{flex:1;overflow-y:auto;display:flex;align-items:center;justify-content:center;
+         padding:48px 32px;background:#FFFFFF}
+  .stage-inner{width:100%;max-width:900px}
+  .kicker{font-size:13px;font-weight:700;color:var(--blue);margin:0 0 16px;text-transform:uppercase}
+  h1.big{
+    font-size:clamp(30px,4.6vw,52px);line-height:1.1;font-weight:400;color:var(--dark);
+    margin:0 0 20px;max-width:22ch;
+  }
+  h1.big em{font-style:normal;color:var(--muted)}
+  .lede{font-size:17px;line-height:1.6;color:var(--mid);max-width:64ch;margin:0 0 32px;font-weight:400}
+  .fineprint{color:var(--muted);font-size:13px;margin-top:24px;line-height:1.6}
+
+  .cta{
+    background:var(--blue);color:#fff;border:0;padding:15px 32px;
+    font-size:15px;font-weight:700;border-radius:11px;font-family:inherit;
+  }
+  .cta:hover{background:#1570E6}
+  .cta.ghost{background:#fff;border:1px solid var(--card-bd);color:var(--mid)}
+  .cta.ghost:hover{border-color:var(--blue);color:var(--blue)}
+  .cta-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+
+  /* numbered instruction rows */
+  .rules{margin:0 0 30px}
+  .rule{display:flex;gap:15px;padding:14px 0;border-bottom:1px solid var(--divider);align-items:flex-start}
+  .rule:first-child{border-top:1px solid var(--divider)}
+  .rule-n{
+    width:26px;height:26px;flex:none;border-radius:50%;background:var(--blue);color:#fff;
+    font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;
+  }
+  .rule-t{font-size:15px;line-height:1.45;color:var(--dark);font-weight:700;padding-top:3px}
+  .rule-t small{display:block;color:var(--mid);font-size:13.5px;font-weight:400;margin-top:4px;line-height:1.5}
+
+  /* cards */
+  .bcard{background:var(--grey);border:1px solid var(--card-bd);border-radius:18px;
+         box-shadow:0 2px 8px rgba(0,0,0,.06)}
+  .bcard.blue{background:var(--bblue);border-color:var(--blue);border-width:1.5px}
+  .bcard.warn{background:var(--warn-bg);border-color:var(--warn-bd)}
+  .bcard.succ{background:var(--succ-bg);border-color:var(--succ-bd)}
+  .accentbar{width:31px;height:6px;border-radius:3px;background:var(--blue);margin-bottom:16px}
+
+  /* stat cards */
+  .metric-row{display:flex;gap:14px;margin:0 0 30px;flex-wrap:wrap}
+  .metric{flex:1;min-width:170px;background:var(--grey);border:1px solid var(--card-bd);
+          border-radius:18px;box-shadow:0 2px 8px rgba(0,0,0,.06);padding:20px 22px}
+  .metric-v{font-size:42px;font-weight:400;color:var(--dark);line-height:1;
+            font-variant-numeric:tabular-nums;margin-bottom:12px}
+  .metric-v small{font-size:16px;color:var(--mid);margin-left:5px}
+  .metric-l{font-size:12.5px;font-weight:700;color:var(--dark);margin-bottom:10px}
+  .metric-d{font-size:11.5px;color:var(--mid);padding-top:9px;border-top:1px solid var(--divider);line-height:1.5}
+
+  /* term/definition rows for the miss list */
+  .miss-list{margin:0 0 30px}
+  .miss{
+    display:flex;align-items:center;gap:14px;background:var(--grey);border:1px solid var(--card-bd);
+    border-radius:12px;padding:13px 16px;margin-bottom:9px;box-shadow:0 2px 8px rgba(0,0,0,.06);
+  }
+  .miss-po{font-size:12.5px;font-weight:700;color:var(--dark);min-width:112px;flex:none;
+           font-variant-numeric:tabular-nums}
+  .miss-txt{font-size:12.5px;color:var(--mid);line-height:1.5;flex:1}
+  .miss-txt b{color:var(--dark);font-weight:700;font-variant-numeric:tabular-nums}
+  .vpill{font-size:10.5px;font-weight:700;padding:4px 12px;border-radius:9px;flex:none}
+  .vpill.caught{background:var(--succ-bg);border:1px solid var(--succ-bd);color:#12813F}
+  .vpill.missed{background:var(--red-bg);border:1px solid var(--red-bd);color:var(--red)}
+
+  /* final verdict */
+  .headline-num{font-size:clamp(52px,8.5vw,96px);font-weight:400;color:var(--dark);
+                line-height:1;margin:0 0 12px;font-variant-numeric:tabular-nums}
+  .headline-sub{font-size:18px;color:var(--mid);line-height:1.55;max-width:58ch;margin:0 0 34px}
+  .bars{margin:0 0 32px}
+  .bar-row{margin-bottom:16px}
+  .bar-lab{font-size:12.5px;color:var(--mid);margin-bottom:7px;display:flex;justify-content:space-between}
+  .bar-lab b{color:var(--dark);font-weight:700;font-variant-numeric:tabular-nums}
+  .bar-track{height:14px;background:var(--grey);border-radius:7px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:7px;transition:width .9s cubic-bezier(.2,.7,.3,1)}
+  .verdict{display:flex;gap:14px;margin:0 0 30px;flex-wrap:wrap}
+  .vcol{flex:1;min-width:210px;border-radius:18px;padding:22px 24px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+  .vcol.without{background:var(--warn-bg);border:1px solid var(--warn-bd)}
+  .vcol.with{background:var(--bblue);border:1.5px solid var(--blue)}
+  .vcol-l{font-size:11.5px;font-weight:700;margin-bottom:14px;text-transform:uppercase}
+  .vcol.without .vcol-l{color:var(--orange)}
+  .vcol.with .vcol-l{color:var(--blue)}
+  .vcol-time{font-size:46px;font-weight:400;color:var(--dark);line-height:1;
+             font-variant-numeric:tabular-nums;margin-bottom:12px}
+  .vcol-acc{font-size:12.5px;color:var(--mid);line-height:1.5;padding-top:10px;border-top:1px solid var(--divider)}
+  .vcol.with .vcol-acc{border-top-color:var(--divider-blue)}
+  .vcol-acc .ok{color:#12813F;font-weight:700}
+
+  /* ============ APP CHROME (round header) ============ */  /* ============ APP CHROME (round header) ============ */
+  .bar{
+    display:flex;align-items:center;gap:20px;padding:0 14px;height:46px;flex:none;
+    background:var(--dark);border-bottom:1px solid #24244E;color:#fff;
+    font-family:var(--brandfont);
+  }
+  .bar-mode{font-size:13px;font-weight:640;letter-spacing:.01em}
+  .bar-mode .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:8px;vertical-align:1px}
+  .bar-prog{font-size:12.5px;color:#A8A8C8;font-variant-numeric:tabular-nums}
+  .clock{
+    margin-left:auto;font-variant-numeric:tabular-nums;font-size:23px;font-weight:600;
+    letter-spacing:.01em;padding-right:4px;
+  }
+  .btn-finish{
+    background:#fff;color:var(--dark);border:0;padding:9px 20px;border-radius:8px;
+    font-size:14px;font-weight:700;font-family:inherit;
+  }
+  .btn-finish:hover{background:var(--bblue)}
+  .btn-start{background:var(--blue);color:#fff;border:0;padding:9px 22px;border-radius:8px;
+             font-size:14px;font-weight:700;font-family:inherit}
+  .btn-start:hover{background:#1570E6}
+  .clock.idle{color:#6A6A96}
+  .split{position:relative}
+
+  .split{flex:1;display:flex;min-height:0}
+  .pane-l{width:52%;min-width:0;display:flex;flex-direction:column;border-right:1px solid #000}
+  .pane-r{flex:1;min-width:0;display:flex;flex-direction:column}
+
+  /* ============ LEGACY ERP ============ */
+  .erp{
+    background:var(--erp-chrome);color:var(--erp-text);height:100%;
+    font-family:Tahoma,Verdana,"Segoe UI",sans-serif;font-size:11px;
+    display:flex;flex-direction:column;min-height:0;
+  }
+  .erp-title{
+    background:var(--erp-title);color:#fff;padding:4px 8px;font-size:11px;font-weight:700;
+    display:flex;justify-content:space-between;align-items:center;flex:none;
+  }
+  .erp-title span{font-weight:400;opacity:.75}
+  .erp-menu{
+    background:var(--erp-chrome-hi);border-bottom:1px solid var(--erp-line);
+    padding:3px 6px;display:flex;gap:14px;flex:none;color:#2c3138;
+  }
+  .erp-menu u{text-decoration-thickness:1px;text-underline-offset:1px}
+  .erp-toolbar{
+    background:var(--erp-chrome);border-bottom:2px groove #fff;padding:5px 6px;
+    display:flex;gap:6px;align-items:center;flex:none;
+  }
+  .erp-btn{
+    background:var(--erp-chrome-hi);border:1px solid var(--erp-line);padding:2px 9px;
+    font-family:inherit;font-size:11px;border-radius:0;color:#2c3138;
+  }
+  .erp-btn:hover{background:#f2f5f9}
+  .erp-btn:active{border-style:inset}
+  .erp-search{
+    border:1px inset var(--erp-line);background:#fff;padding:2px 5px;font-family:inherit;font-size:11px;width:130px;
+  }
+  .erp-secthead{
+    background:var(--erp-chrome);padding:3px 7px;font-weight:700;font-size:11px;
+    border-bottom:1px solid var(--erp-line);border-top:1px solid #fff;flex:none;color:#2c3138;
+  }
+  .erp-scroll{overflow-y:auto;background:var(--erp-grid);min-height:0}
+  table.erp-grid{border-collapse:collapse;width:100%;background:var(--erp-grid)}
+  table.erp-grid th{
+    background:var(--erp-chrome-hi);border:1px solid var(--erp-line-soft);border-top:0;
+    padding:3px 6px;text-align:left;font-size:11px;font-weight:700;position:sticky;top:0;z-index:2;color:#2c3138;
+  }
+  table.erp-grid td{border:1px solid #e2e6ec;padding:2px 6px;white-space:nowrap;font-size:11px}
+  table.erp-grid tr:nth-child(even) td{background:var(--erp-zebra)}
+  table.erp-grid tr.po-row{cursor:default}
+  table.erp-grid tr.po-row:hover td{background:#dbe6f7}
+  table.erp-grid tr.sel td,table.erp-grid tr.sel:hover td{background:var(--erp-sel);color:#fff}
+  table.erp-grid tr.erp-hl td{background:#ffeaa0;box-shadow:inset 0 -1px 0 #d9a900,inset 0 1px 0 #d9a900}
+  .num{text-align:right;font-variant-numeric:tabular-nums}
+  .erp-empty{padding:22px 14px;color:#5d6570;background:var(--erp-grid);font-size:11px}
+  .erp-input{
+    font-family:Tahoma,Verdana,sans-serif;font-size:11px;border:1px inset var(--erp-line);
+    background:#fff;padding:1px 3px;width:100%;border-radius:0;
+  }
+  .erp-input.q{width:56px;text-align:right}
+  .erp-input.p{width:68px;text-align:right}
+  .erp-input.d{width:112px}
+  .erp-input.touched{background:#fffbdd}
+  .erp-status{
+    background:var(--erp-chrome);border-top:1px solid #fff;padding:3px 8px;font-size:11px;
+    display:flex;justify-content:space-between;color:#3a4048;flex:none;
+  }
+  .saved{color:#0a6b2e;font-weight:700}
+
+  /* ============ OUTLOOK ============ */
+  .ol{background:#fff;height:100%;display:flex;flex-direction:column;min-height:0;
+      font-family:"Segoe UI",Tahoma,Verdana,sans-serif;font-size:12px;color:#201f1e}
+  .ol-title{background:#2b579a;color:#fff;height:25px;display:flex;align-items:center;
+            padding:0 9px;font-size:11.5px;flex:none;gap:8px}
+  .ol-title .sq{width:9px;height:9px;background:#fff;opacity:.85;flex:none}
+  .ol-tabs{background:#2b579a;display:flex;padding:0 5px;flex:none;align-items:flex-end;height:24px}
+  .ol-tab{padding:4px 12px;font-size:11.5px;color:#c7d6ec}
+  .ol-tab.on{background:#f3f2f1;color:#2b579a;font-weight:600}
+  .ol-ribbon{background:#f3f2f1;border-bottom:1px solid #e1dfdd;padding:5px 7px;
+             display:flex;gap:2px;align-items:center;flex:none}
+  .ol-cmd{background:transparent;border:1px solid transparent;padding:4px 9px;font-family:inherit;
+          font-size:11.5px;color:#201f1e;border-radius:2px;display:flex;align-items:center;gap:5px}
+  .ol-cmd:hover{background:#e1dfdd;border-color:#c8c6c4}
+  .ol-cmd .ic{color:#2b579a;font-size:12px;line-height:1}
+  .ol-cmd .ic.red{color:#a4262c}
+  .ol-body{flex:1;display:flex;min-height:0}
+  .ol-folders{width:122px;flex:none;background:#f3f2f1;border-right:1px solid #e1dfdd;padding:9px 0;font-size:11.5px}
+  .ol-fgroup{padding:2px 10px 6px;color:#605e5c;font-size:11px}
+  .ol-fold{padding:4px 10px 4px 13px;display:flex;justify-content:space-between;gap:6px;color:#201f1e;border-left:3px solid transparent}
+  .ol-fold.on{background:#deecf9;font-weight:600;border-left-color:#2b579a}
+  .ol-fold b{color:#2b579a;font-weight:600}
+  .ol-main{flex:1;display:flex;flex-direction:column;min-width:0}
+  .ol-listhdr{background:#fff;border-bottom:1px solid #edebe9;padding:6px 11px;font-size:11.5px;
+              display:flex;justify-content:space-between;color:#605e5c;flex:none}
+  .ol-listhdr b{color:#201f1e;font-weight:600}
+  .ol-list{overflow-y:auto;min-height:0;flex:0 0 44%;border-bottom:1px solid #e1dfdd;background:#fff}
+  .ol-msg{display:flex;gap:8px;padding:7px 11px 7px 8px;border-bottom:1px solid #f3f2f1;
+          cursor:pointer;border-left:3px solid transparent;align-items:flex-start}
+  .ol-msg:hover{background:#f3f2f1}
+  .ol-msg.unread{border-left:4px solid #0078d4;padding-left:7px;background:#EFF6FE}
+  .ol-msg.unread:hover{background:#E3EFFC}
+  .ol-msg.unread .ol-from{color:#0078d4;font-weight:700}
+  .ol-msg.unread .ol-subj{font-weight:700;color:#12123A}
+  .ol-msg.unread .ol-clip{color:#0078d4}
+  .ol-msg:not(.unread) .ol-from{color:#6B6B70;font-weight:400}
+  .ol-msg:not(.unread) .ol-subj{color:#57575C}
+  .ol-msg:not(.unread) .ol-prev{color:#8A8A90}
+  .ol-msg.sel,.ol-msg.sel:hover{background:#cce4f7}
+  .ol-col{flex:1;min-width:0}
+  .ol-from{font-size:12px;font-weight:600;display:flex;justify-content:space-between;gap:8px}
+  .ol-date{color:#605e5c;font-size:11px;font-weight:400;flex:none}
+  .ol-subj{font-size:11.5px;margin:1px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ol-prev{font-size:11px;color:#605e5c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ol-clip{color:#605e5c;font-size:12px;flex:none;padding-top:2px}
+  .ol-read{flex:1;overflow-y:auto;padding:15px 20px;min-height:0;background:#fff}
+  .ol-rsubj{font-size:17px;font-weight:600;margin:0 0 13px;line-height:1.3}
+  .ol-sender{display:flex;gap:10px;align-items:flex-start;margin-bottom:13px}
+  .ol-av{width:32px;height:32px;border-radius:50%;background:#2b579a;color:#fff;flex:none;
+         display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+  .ol-sname{font-size:12.5px;font-weight:600}
+  .ol-saddr{font-size:11.5px;color:#605e5c}
+  .ol-when{margin-left:auto;font-size:11.5px;color:#605e5c;flex:none;text-align:right}
+  .ol-acts{display:flex;gap:16px;margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid #edebe9}
+  .ol-act{background:none;border:0;color:#2b579a;font-size:11.5px;padding:0;font-family:inherit}
+  .ol-act:hover{text-decoration:underline}
+  .ol-text{font-size:12.5px;line-height:1.7;white-space:pre-wrap}
+  .ol-attach{margin-top:17px;padding-top:12px;border-top:1px solid #edebe9}
+  .ol-attach-lab{font-size:11px;color:#605e5c;margin-bottom:7px}
+  .ol-chip{display:inline-flex;align-items:center;gap:9px;border:1px solid #e1dfdd;background:#faf9f8;
+           padding:8px 13px;font-family:inherit;font-size:11.5px;border-radius:2px;color:#201f1e}
+  .ol-chip:hover{background:#f3f2f1;border-color:#2b579a}
+  .ol-empty{color:#605e5c;font-size:12px;padding:10px 0}
+  .ol-status{background:#2b579a;color:#fff;font-size:11px;padding:3px 10px;display:flex;
+             justify-content:space-between;flex:none}
+  .pdf-ico{background:#a4262c;color:#fff;font-size:8.5px;font-weight:700;padding:2px 4px;letter-spacing:.02em}
+
+  /* ============ SETUP PANEL ============ */
+  .setup-veil{position:fixed;inset:0;background:rgba(18,18,58,.5);z-index:95;display:flex;
+              align-items:center;justify-content:center;padding:28px;overflow-y:auto}
+  .setup{background:#fff;border:1px solid var(--card-bd);border-radius:18px;width:100%;max-width:620px;
+         padding:28px 32px 26px;box-shadow:0 14px 40px rgba(0,0,0,.18);font-family:var(--brandfont)}
+  .setup h2{font-size:23px;font-weight:400;color:var(--dark);margin:0 0 8px}
+  .setup p.sub{font-size:13.5px;color:var(--mid);line-height:1.55;margin:0 0 20px}
+  .setup .field{max-width:none;margin-bottom:15px}
+  .setup .field input{font-size:14px;padding:11px 13px}
+  .setup-state{font-size:12.5px;padding:11px 13px;border-radius:11px;margin:0 0 18px;line-height:1.5}
+  .setup-state.on{background:var(--succ-bg);border:1px solid var(--succ-bd);color:#12813F}
+  .setup-state.off{background:var(--warn-bg);border:1px solid var(--warn-bd);color:#8A4A18}
+  .setup-state.bad{background:var(--red-bg);border:1px solid var(--red-bd);color:var(--red)}
+  .setup-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .setup-btn{background:#fff;border:1px solid var(--card-bd);color:var(--mid);padding:11px 20px;
+             border-radius:11px;font-family:inherit;font-size:14px;font-weight:700}
+  .setup-btn:hover{border-color:var(--blue);color:var(--blue)}
+  .setup-btn.go{background:var(--blue);border-color:var(--blue);color:#fff}
+  .setup-btn.go:hover{background:#1570E6}
+  .setup-hint{font-size:11.5px;color:var(--muted);margin-top:16px;line-height:1.6}
+
+  /* ============ BRIEFING OVERLAY ============ */
+  .brief-veil{
+    position:fixed;inset:0;background:rgba(18,18,58,.46);z-index:70;display:flex;
+    align-items:center;justify-content:center;padding:28px;overflow-y:auto;
+    animation:fadeIn .18s ease-out;
+  }
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .brief{
+    background:#fff;border:1px solid var(--card-bd);border-radius:18px;width:100%;max-width:660px;
+    padding:32px 36px 30px;color:var(--dark);box-shadow:0 14px 40px rgba(0,0,0,.16);
+    font-family:var(--brandfont);
+  }
+  .brief-h{font-size:27px;font-weight:400;color:var(--dark);line-height:1.15;margin:0 0 12px}
+  .brief-l{font-size:14.5px;line-height:1.6;color:var(--mid);margin:0 0 24px}
+  .brief .rules{margin-bottom:26px}
+  .brief .rule{padding:12px 0}
+  .brief .rule-t{font-size:14px}
+  .brief .rule-t small{font-size:13px}
+  .brief-foot{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .brief-foot .fineprint{margin:0}
+
+  /* ============ ROUND 2 FULL WIDTH ============ */
+  .axfull{flex:1;min-height:0;display:flex}
+  .wb-cols{flex:1;min-height:0;display:flex}
+  .wb-pdf{width:36%;min-width:290px;flex:none;border-right:1px solid #E4E2DD;
+          display:flex;flex-direction:column;min-height:0;background:#EFEEEB}
+  .pdfhead{flex:none;display:flex;align-items:center;gap:9px;padding:8px 11px;background:#fff;
+           border-bottom:1px solid #EAE8E3;font-size:11px;color:#4A5049}
+  .pdftag{background:#F1F0EC;border:1px solid #E0DED8;border-radius:4px;padding:2px 7px;font-size:10px;color:#5A5F58}
+  .pdfname{font-weight:640;color:#1B1F24;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pdfdate{color:#8A8880;flex:none}
+  .pdfpg{margin-left:auto;flex:none;font-variant-numeric:tabular-nums;color:#8A8880}
+  .pdfsearch{flex:none;padding:6px 11px;background:#fff;border-bottom:1px solid #EAE8E3;
+             font-size:11.5px;color:#A9A6A0;display:flex;gap:7px;align-items:center}
+  .pdf-scroll{flex:1;overflow-y:auto;min-height:0;padding:12px}
+  .wb-pdf .sheet{padding:22px 22px 18px;max-width:none;box-shadow:0 2px 10px rgba(0,0,0,.13)}
+  .wb-pdf .lh-co{font-size:16px}
+  .wb-pdf .docmeta{grid-template-columns:repeat(auto-fit,minmax(92px,1fr))}
+  .wb-pdf table.ack{font-size:9.5px}
+  .wb-pdf table.ack thead th,.wb-pdf table.ack td{padding:4px 5px}
+  .wb-pdf .sheet-terms{font-size:9px}
+  .sheet tr.pdf-hl td{background:#FFF0BE;box-shadow:inset 0 0 0 1px #DFAF2E}
+  .wb-main{flex:1;min-width:0;display:flex;flex-direction:column;min-height:0}
+  .wb-rail{width:252px;flex:none;border-left:1px solid #E4E2DD;background:#FCFCFB;
+           overflow-y:auto;min-height:0}
+  .wb-rail .ins{border:0;background:transparent}
+
+  /* ============ AXYA APP SHELL + ORDERS LIST ============ */
+  .axapp{flex:1;min-width:0;width:100%;height:100%;display:flex;flex-direction:column;min-height:0;background:#fff;
+         font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .axtop{background:#111A2E;color:#E8EBF2;height:34px;flex:none;display:flex;align-items:center;
+         gap:10px;padding:0 11px;font-size:11.5px}
+  .axtop-logo{font-weight:700;letter-spacing:-.01em;font-size:12.5px;display:flex;align-items:center;gap:6px}
+  .axtop-logo .mk{width:11px;height:11px;border:1.5px solid #E8EBF2;display:inline-block}
+  .axtop-sel{background:#1D2740;border:1px solid #2C3852;border-radius:4px;padding:3px 9px;
+             display:flex;align-items:center;gap:7px;color:#C6CDDC}
+  .axtop-search{margin-left:auto;background:#1D2740;border:1px solid #2C3852;border-radius:4px;
+                padding:3px 10px;color:#8D98AF;display:flex;align-items:center;gap:7px}
+  .axtop-ask{background:#1D2740;border:1px solid #3A2C6B;border-radius:4px;padding:3px 10px;
+             color:#B9AEE8;display:flex;align-items:center;gap:6px}
+  .kbd{background:#2C3852;border-radius:3px;padding:0 4px;font-size:9.5px;color:#9AA5BC}
+  .axview{flex:1;min-height:0;display:flex}
+
+  .ord{flex:1;min-width:0;display:flex;flex-direction:column;min-height:0;font-size:12px;color:#1B1F24}
+  .ord-filters{padding:8px 12px;border-bottom:1px solid #EAE8E3;display:flex;gap:6px;align-items:center;flex:none;flex-wrap:wrap}
+  .fchip{background:#fff;border:1px solid #D6D3CD;border-radius:14px;padding:3px 10px;font-size:11px;
+         color:#4A5049;display:inline-flex;align-items:center;gap:5px;font-family:inherit}
+  .fchip:hover{border-color:#9C9A94}
+  .fchip .val{color:var(--ax-accent);font-weight:600}
+  .fchip.create{margin-left:auto;background:var(--ax-accent);border-color:var(--ax-accent);color:#fff;font-weight:560}
+  .ord-stats{padding:7px 12px;border-bottom:1px solid #EAE8E3;display:flex;gap:5px;align-items:center;flex:none;flex-wrap:wrap}
+  .schip{border:1px solid transparent;border-radius:14px;padding:3px 10px;font-size:11px;
+         display:inline-flex;align-items:center;gap:6px;color:#4A5049;background:#FCFCFB;font-family:inherit}
+  .schip.on{border-color:#D6D3CD;background:#fff;font-weight:600;color:#1B1F24}
+  .schip .n{color:#8A8880;font-variant-numeric:tabular-nums}
+  .schip .ic{font-size:10px}
+  .ord-page{margin-left:auto;font-size:11px;color:#8A8880;font-variant-numeric:tabular-nums}
+  .ord-scroll{flex:1;overflow:auto;min-height:0}
+  table.ordg{border-collapse:collapse;width:100%;min-width:100%;font-size:11.5px}
+  table.ordg th{background:#FCFCFB;border-bottom:1px solid #E4E2DD;padding:8px 8px;text-align:left;
+                font-size:10.5px;font-weight:640;color:#4A5049;position:sticky;top:0;z-index:2;white-space:nowrap}
+  table.ordg td{border-bottom:1px solid #F1F0EC;padding:8px 8px;white-space:nowrap}
+  table.ordg tr:hover td{background:#FAFAF8}
+  table.ordg tr.flagged td{background:#FDF4E6}
+  table.ordg tr.flagged:hover td{background:#FBECD6}
+  table.ordg tr.flagged td:first-child{box-shadow:inset 4px 0 0 #B4530A}
+  table.ordg tr.flagged .o-name{font-weight:700}
+  .o-name{font-variant-numeric:tabular-nums;font-weight:560;display:flex;align-items:center;gap:7px}
+  .who{width:20px;height:20px;border-radius:50%;background:#E9E7E1;color:#5A5F58;font-size:9px;
+       font-weight:640;display:inline-flex;align-items:center;justify-content:center}
+  .supp{display:inline-flex;align-items:center;gap:6px;max-width:132px;overflow:hidden;text-overflow:ellipsis}
+  .supp .dotc{width:15px;height:15px;border-radius:50%;background:#F0B429;flex:none}
+  .st{font-size:10.5px;padding:2px 9px;border-radius:11px;display:inline-flex;gap:5px;align-items:center;white-space:nowrap}
+  .st.blue{background:#EAF1FE;color:#1F5FBF}
+  .st.amber{background:#FDF2E3;color:#9C5514}
+  .st.green{background:#EDF7EF;color:#2F7A44}
+  .st.review{background:#FDEBD8;color:#9C5514;border:1px solid #F0CFA4;font-weight:640}
+  .st.needs{
+    background:#B4530A;color:#fff;font-weight:660;font-size:11px;padding:4px 12px;
+    box-shadow:0 0 0 0 rgba(180,83,10,.55);animation:beat 2.1s ease-out infinite;
+  }
+  .st.needs .warn{font-size:12px}
+  @keyframes beat{
+    0%{box-shadow:0 0 0 0 rgba(180,83,10,.5)}
+    70%{box-shadow:0 0 0 9px rgba(180,83,10,0)}
+    100%{box-shadow:0 0 0 0 rgba(180,83,10,0)}
+  }
+  .prog{display:inline-flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums;color:#4A5049}
+  .ring{width:12px;height:12px;border-radius:50%;border:2px solid #D8DED9;flex:none}
+  .ring.part{border-color:#2F7A44;border-right-color:#D8DED9;border-bottom-color:#D8DED9}
+  .ring.full{border-color:#2F7A44}
+  .tagph{color:#B4B1AB;font-size:11px}
+  .ord-hint{padding:8px 12px;background:#F6F5FF;border-bottom:1px solid #E6E3FF;font-size:11.5px;
+            color:#3E3A6B;display:flex;gap:7px;align-items:baseline;flex:none}
+
+  .wb-crumb{flex:none;display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid #EAE8E3;background:#FCFCFB}
+  .wb-back{background:#fff;border:1px solid #D6D3CD;border-radius:5px;padding:4px 11px 4px 8px;
+           font-family:inherit;font-size:11.5px;color:#1B1F24;display:flex;align-items:center;gap:6px}
+  .wb-back:hover{border-color:var(--ax-accent);color:var(--ax-accent)}
+  .wb-crumb-t{font-size:11.5px;color:#8A8880}
+  .wb-crumb-t b{color:#1B1F24;font-weight:640;font-variant-numeric:tabular-nums}
+
+  /* ============ AXYA WORK BENCH ============ */
+  .wb{background:#fff;color:#1B1F24;flex:1;min-width:0;display:flex;flex-direction:column;min-height:0;
+      font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:12.5px}
+  .wb-bar{padding:11px 16px 10px;border-bottom:1px solid #EAE8E3;flex:none;display:flex;align-items:center;gap:10px}
+  .wb-brand{font-size:13.5px;font-weight:640;display:flex;align-items:center;gap:7px;letter-spacing:-.01em}
+  .spark{color:var(--ax-accent);font-size:13px}
+  .pill{font-size:11px;padding:2px 9px;border-radius:11px;white-space:nowrap;font-weight:560}
+  .pill.amber{background:#FDEBD8;color:#9C5514;border:1px solid #F4D8B4}
+  .pill.green{background:#F1F8F2;color:#3F7A4C;border:1px solid #C6DECC}
+  .wb-tools{padding:9px 16px;border-bottom:1px solid #EAE8E3;flex:none;display:flex;align-items:center;gap:8px}
+  .wb-btn{background:#fff;border:1px solid #D6D3CD;color:#1B1F24;padding:6px 13px;border-radius:5px;
+          font-family:inherit;font-size:12px;font-weight:540}
+  .wb-btn:hover{border-color:#9C9A94}
+  .wb-btn.primary{margin-left:auto;background:var(--ax-accent);border-color:var(--ax-accent);color:#fff}
+  .wb-btn.primary:hover{background:#3A29F0}
+  .wb-btn.primary:disabled{background:#F2F1EE;border-color:#E4E2DD;color:#A9A6A0;cursor:default}
+  .wb-scroll{flex:1;overflow-y:auto;min-height:0}
+
+  .ins{padding:13px 16px 15px;border-bottom:1px solid #EAE8E3;background:#FCFCFB}
+  .ins-h{font-size:12px;font-weight:640;display:flex;align-items:center;gap:7px;margin-bottom:10px}
+  .ins-card{border:1px solid #C6DECC;background:#F1F8F2;padding:11px 13px;margin-bottom:11px}
+  .ins-card.warn{border-color:#F4D8B4;background:#FDF6EE}
+  .ins-lab{font-size:10.5px;font-weight:700;letter-spacing:.05em;color:#3F7A4C;margin-bottom:5px}
+  .ins-card.warn .ins-lab{color:#9C5514}
+  .ins-note{font-size:11.5px;color:#5D6B60;line-height:1.5;margin-bottom:9px}
+  .ins-part{font-size:12.5px;font-weight:640;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+  .ins-math{font-size:11.5px;font-variant-numeric:tabular-nums;line-height:1.7;color:#2E3A32}
+  .ins-math span{display:inline-block;width:62px;color:#7C8A80;font-size:10.5px;letter-spacing:.03em}
+  .ins-why{font-size:11.5px;color:#5D6B60;line-height:1.55;margin-top:7px}
+  .ins-line{font-size:11.5px;line-height:1.6;display:flex;gap:7px;margin-top:7px}
+  .ins-line.amber{color:#9C5514}
+  .ins-line.green{color:#3F7A4C}
+
+  table.wbg{border-collapse:collapse;width:100%;font-size:12px}
+  table.wbg th{
+    background:#FCFCFB;border-bottom:1px solid #E4E2DD;padding:8px 9px;text-align:left;
+    font-size:11px;font-weight:640;color:#4A5049;position:sticky;top:0;z-index:2;white-space:nowrap;
+  }
+  table.wbg td{border-bottom:1px solid #F1F0EC;padding:7px 9px;vertical-align:middle}
+  table.wbg tr.r-chg td{background:#FDF6EE}
+  table.wbg tr.r-ok td,table.wbg tr.r-auto td{background:#F7FBF8}
+  table.wbg tr.r-hl td{box-shadow:inset 0 0 0 1px var(--ax-accent)}
+  .c-ln{width:34px;color:#7A807A;font-variant-numeric:tabular-nums}
+  .c-chk{width:26px}
+  .c-part{white-space:nowrap;font-variant-numeric:tabular-nums}
+  .c-desc{color:#4A5049;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .c-val{width:118px;font-variant-numeric:tabular-nums}
+  .wbc{display:flex;align-items:center;gap:6px}
+  .wbc .tick{color:#4E9A63;font-size:12px}
+  .wbd{display:flex;align-items:center;gap:7px;position:relative}
+  .wbd-pair{display:flex;flex-direction:column;line-height:1.25}
+  .wbd-old{color:#A9A6A0;text-decoration:line-through;font-size:11px}
+  .wbd-new{color:#9C5514;font-weight:640}
+  .wbd-btn{width:21px;height:21px;border-radius:50%;border:1px solid;background:#fff;font-size:11px;
+           line-height:1;padding:0;display:flex;align-items:center;justify-content:center;flex:none}
+  .wbd-ok{border-color:#9AC7A6;color:#3F7A4C}
+  .wbd-ok:hover{background:#3F7A4C;color:#fff;border-color:#3F7A4C}
+  .wbd-no{border-color:#D6D3CD;color:#8A8880}
+  .wbd-no:hover{background:var(--ax-revise);color:#fff;border-color:var(--ax-revise)}
+  .wbd-acts{display:flex;gap:4px}
+  .rejtag{font-size:10.5px;color:var(--ax-revise);background:var(--ax-revise-soft);padding:1px 6px;white-space:nowrap}
+  .autotag{font-size:10px;color:#3F7A4C;background:#EAF4EC;padding:1px 6px;border:1px solid #C6DECC;white-space:nowrap}
+  .loupe{background:none;border:0;color:#B4B1AB;font-size:11px;padding:0 2px;font-family:inherit}
+  .loupe:hover{color:var(--ax-accent)}
+  .wb-chk{width:13px;height:13px;accent-color:var(--ax-accent);margin:0;vertical-align:middle}
+
+  .tip-host{position:relative}
+  .tip-host:hover .tip{display:block}
+  .tip{
+    display:none;position:absolute;bottom:calc(100% + 7px);right:0;z-index:30;width:230px;
+    background:#22262B;color:#EDEEF0;padding:9px 11px;font-size:11px;line-height:1.5;
+    box-shadow:0 6px 20px rgba(0,0,0,.3);border-radius:4px;font-weight:400;
+  }
+  .tip b{display:block;font-weight:640;margin-bottom:3px;color:#fff}
+
+  .wb-foot{flex:none;padding:9px 16px;border-top:1px solid #EAE8E3;background:#FCFCFB;
+           font-size:10.5px;color:#8A8880;line-height:1.5}
+  .wb-sent{margin:0 16px 14px;padding:11px 13px;background:var(--ax-revise-soft);
+           border:1px solid #EFC9C3;font-size:11.5px;line-height:1.6;color:#7A2A22}
+  .wb-sent b{font-weight:640;display:block;margin-bottom:4px}
+  .wb-tip{padding:8px 16px;background:#F6F5FF;border-bottom:1px solid #E6E3FF;font-size:11.5px;color:#3E3A6B;
+          display:flex;gap:7px;align-items:baseline}
+
+  /* ============ SIGNUP + LEADERBOARD ============ */
+  .field{margin-bottom:18px;max-width:440px}
+  .field label{display:block;font-size:12.5px;font-weight:700;color:var(--dark);margin-bottom:7px}
+  .field input[type=text],.field input[type=email]{
+    width:100%;background:#fff;border:1px solid var(--card-bd);color:var(--dark);
+    padding:13px 15px;font-size:16px;border-radius:11px;font-family:inherit;
+  }
+  .field input:focus{border-color:var(--blue);outline:none;box-shadow:0 0 0 3px var(--bblue)}
+  .field .err{color:var(--red);font-size:12px;margin-top:6px;display:none}
+  .field.bad input{border-color:var(--red-bd);background:var(--red-bg)}
+  .field.bad .err{display:block}
+  .consent{display:flex;gap:11px;align-items:flex-start;max-width:540px;margin:0 0 26px;cursor:pointer}
+  .consent input{margin:2px 0 0;width:17px;height:17px;accent-color:var(--blue);flex:none}
+  .consent span{font-size:13px;color:var(--mid);line-height:1.55}
+  .board{width:100%;border-collapse:collapse;margin-bottom:26px}
+  .board th{text-align:left;font-size:11px;font-weight:700;color:var(--muted);
+            padding:0 12px 10px 0;border-bottom:1px solid var(--divider);text-transform:uppercase}
+  .board td{padding:13px 12px 13px 0;border-bottom:1px solid var(--divider);font-size:14px;color:var(--mid)}
+  .board .r-rank{color:var(--muted);font-variant-numeric:tabular-nums;width:46px}
+  .board .r-name{font-weight:700;color:var(--dark)}
+  .board .r-num{font-variant-numeric:tabular-nums;text-align:right}
+  .board tr.me td{background:var(--bblue)}
+  .board tr.me td:first-child{box-shadow:inset 3px 0 0 var(--blue);border-radius:8px 0 0 8px}
+  .board tr.me .r-rank{color:var(--blue);font-weight:700}
+  .board tr.me .r-name::after{content:" (you)";color:var(--mid);font-weight:400}
+  .board-empty{color:var(--mid);font-size:14px;padding:24px 0;border-top:1px solid var(--divider);
+               border-bottom:1px solid var(--divider);margin-bottom:26px}
+  .storenote{color:var(--muted);font-size:12px;margin-top:20px;line-height:1.6}
+
+  /* ============ IN-PANEL PDF VIEWER ============ */
+  .pane-r{position:relative}
+  .docview{
+    position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;background:#4e5257;
+    animation:slideIn .16s ease-out;
+  }
+  @keyframes slideIn{from{transform:translateX(14px);opacity:.4}to{transform:none;opacity:1}}
+  .doc-bar{
+    flex:none;background:#33373b;color:#e8e9ea;display:flex;align-items:center;gap:12px;
+    padding:0 10px;height:34px;font-family:Tahoma,Verdana,sans-serif;font-size:11px;
+    border-bottom:1px solid #26292c;
+  }
+  .doc-back{
+    background:#4a4e53;border:1px solid #5c6167;color:#e8e9ea;padding:3px 11px 3px 8px;
+    font-family:inherit;font-size:11px;border-radius:2px;display:flex;align-items:center;gap:6px;
+  }
+  .doc-back:hover{background:#5a5f65;border-color:#767c83}
+  .doc-back .arw{font-size:13px;line-height:1}
+  .doc-name{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .doc-page{margin-left:auto;color:#a5a9ae;flex:none}
+  .doc-zoom{background:#4a4e53;border:1px solid #5c6167;color:#a5a9ae;width:22px;height:20px;
+            font-size:11px;border-radius:2px;line-height:1;font-family:inherit}
+  .doc-scroll{flex:1;overflow-y:auto;padding:16px;min-height:0}
+
+  /* ============ THE SUPPLIER DOCUMENT ============ */
+  .sheet{
+    background:#fff;color:#1a1d21;width:100%;max-width:680px;margin:0 auto;padding:30px 32px 24px;
+    font-family:"Times New Roman",Georgia,serif;box-shadow:0 3px 14px rgba(0,0,0,.45);
+  }
+  .lh{display:flex;justify-content:space-between;align-items:flex-start;
+      border-bottom:2px solid #1a1d21;padding-bottom:11px;margin-bottom:14px;gap:16px}
+  .lh-co{font-size:19px;font-weight:700;letter-spacing:-.01em;line-height:1.1}
+  .lh-addr{font-size:10.5px;color:#55595e;line-height:1.5;margin-top:4px;
+           font-family:ui-sans-serif,Arial,sans-serif}
+  .lh-doc{text-align:right;font-size:12px;font-weight:700;line-height:1.2;flex:none}
+  .lh-doc small{display:block;font-weight:400;font-size:10.5px;color:#55595e;margin-top:5px;
+                font-family:ui-sans-serif,Arial,sans-serif;line-height:1.6}
+
+  .docmeta{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(102px,1fr));
+    border:1px solid #1a1d21;margin-bottom:15px;font-family:ui-sans-serif,Arial,sans-serif;
+  }
+  .docmeta div{padding:5px 8px 6px;border-right:1px solid #CFCFC9;border-bottom:1px solid #CFCFC9;min-width:0}
+  .docmeta div:last-child{border-right:0}
+  .docmeta span{display:block;font-size:8px;text-transform:uppercase;color:#71767c;margin-bottom:3px}
+  .docmeta b{font-size:11px;font-weight:700;color:#1a1d21;word-break:break-word}
+
+  .sheet p.intro{font-size:11px;line-height:1.55;margin:0 0 11px;color:#3d4249;
+                 font-family:ui-sans-serif,Arial,sans-serif}
+
+  table.ack{width:100%;border-collapse:collapse;font-family:ui-sans-serif,Arial,sans-serif;font-size:10px}
+  table.ack thead th{
+    background:#ECECE8;border-top:1px solid #1a1d21;border-bottom:1px solid #1a1d21;
+    padding:5px 6px;text-align:left;font-size:8.5px;font-weight:700;text-transform:uppercase;color:#3d4249;
+  }
+  table.ack td{border-bottom:1px solid #DEDEDA;padding:5px 6px;vertical-align:top;line-height:1.35}
+  table.ack tbody tr:nth-child(even) td{background:#FAFAF8}
+  table.ack .k-ln{width:28px;color:#8a8f96;font-variant-numeric:tabular-nums;text-align:right}
+  table.ack .k-it{white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:600}
+  table.ack .k-ds{color:#3d4249}
+  table.ack .k-n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .sheet tr.pdf-hl td{background:#FFF0BE;box-shadow:inset 0 0 0 1px #DFAF2E}
+
+  .totwrap{display:flex;justify-content:flex-end;margin-top:11px}
+  table.tot{border-collapse:collapse;font-family:ui-sans-serif,Arial,sans-serif;font-size:10.5px;min-width:196px}
+  table.tot td{padding:3px 7px}
+  table.tot td.l{color:#55595e}
+  table.tot td.v{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  table.tot tr.grand td{border-top:1px solid #1a1d21;font-weight:700;color:#1a1d21;padding-top:5px}
+
+  .sheet-terms{margin-top:16px;padding-top:10px;border-top:1px solid #DEDEDA;font-size:9.5px;
+               color:#5b6067;line-height:1.6;font-family:ui-sans-serif,Arial,sans-serif}
+  .sheet-terms b{color:#3d4249;font-weight:700}
+  .sheet-foot{margin-top:14px;padding-top:8px;border-top:1px solid #DEDEDA;font-size:9px;
+              color:#8a8f96;display:flex;justify-content:space-between;gap:10px;
+              font-family:ui-sans-serif,Arial,sans-serif}
+
+  .toast{
+    position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--dark);color:#fff;
+    padding:12px 22px;font-size:13px;font-weight:700;z-index:90;border-radius:11px;
+    box-shadow:0 8px 26px rgba(18,18,58,.28);font-family:var(--brandfont);
+  }
+
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+"use strict";
+
+/* ============================================================
+   CONFIG  -  the only part you edit to point the game at a backend.
+   Paste the Apps Script /exec URL from the Google Sheet deployment.
+   Leave it empty and the game runs entirely offline on this machine.
+   ============================================================ */
+const CONFIG = {
+  SHEET_ENDPOINT: "",        // e.g. https://script.google.com/macros/s/AKfy.../exec
+  KEY: "axya-booth-2026",    // must match the KEY in the Apps Script
+  POLL_MS: 6000              // how often the live board refreshes
+};
+
+
+/* ============================================================
+   DATA — the three scored POs. Same data in both rounds.
+   ============================================================ */
+const SCORED = [
+  {
+    po:"PO-48213", supplier:"Groupe Métalika", email:"ventes@metalika.ca",
+    city:"Laval, QC", ack:"AR-22910", ackDate:"2026-09-02",
+    lines:[
+      {ln:10,  part:"MB-4410", desc:"Bracket, mild steel, 6 mm",       qty:250,  price:12.40,  date:"2026-09-22",
+       ackQty:250,  ackPrice:12.40,  ackDate:"2026-09-23"},
+      {ln:20,  part:"MB-4412", desc:"Bracket, mild steel, 8 mm",       qty:120,  price:15.80,  date:"2026-09-22",
+       ackQty:120,  ackPrice:15.80,  ackDate:"2026-09-22"},
+      {ln:30,  part:"WS-2201", desc:"Weld stud, M8 x 25",              qty:1000, price:0.85,   date:"2026-09-29",
+       ackQty:1000, ackPrice:0.94,   ackDate:"2026-09-29"},
+      {ln:40,  part:"PL-3050", desc:"Plate, hot rolled 1/4 in, 48x96", qty:18,   price:96.50,  date:"2026-09-25",
+       ackQty:18,   ackPrice:96.50,  ackDate:"2026-09-25"},
+      {ln:50,  part:"AN-2020", desc:"Angle, 2 x 2 x 1/4, 6 m",         qty:40,   price:27.40,  date:"2026-09-25",
+       ackQty:80,   ackPrice:13.70,  ackDate:"2026-09-25", uom:true},
+      {ln:60,  part:"TU-1140", desc:"Tube, 2 in OD x 6 m",             qty:25,   price:41.00,  date:"2026-10-02",
+       ackQty:20,   ackPrice:41.00,  ackDate:"2026-10-02"},
+      {ln:70,  part:"HX-8801", desc:"Hex bolt, grade 8, 1/2-13",       qty:500,  price:0.42,   date:"2026-09-22",
+       ackQty:500,  ackPrice:0.42,   ackDate:"2026-09-22"},
+      {ln:80,  part:"NU-8802", desc:"Nylon lock nut, 1/2-13",          qty:500,  price:0.18,   date:"2026-09-22",
+       ackQty:500,  ackPrice:0.18,   ackDate:"2026-09-22"},
+      {ln:90,  part:"FW-8803", desc:"Flat washer, hardened",           qty:1000, price:0.09,   date:"2026-09-22",
+       ackQty:1000, ackPrice:0.09,   ackDate:"2026-09-22"},
+      {ln:100, part:"GK-4420", desc:"Gasket, compressed fibre",        qty:150,  price:3.35,   date:"2026-10-06",
+       ackQty:150,  ackPrice:3.35,   ackDate:"2026-10-06"},
+      {ln:110, part:"BU-6610", desc:"Bronze bushing, flanged",         qty:40,   price:14.25,  date:"2026-10-06",
+       ackQty:40,   ackPrice:14.25,  ackDate:"2026-10-06"},
+      {ln:120, part:"SE-6620", desc:"Rotary shaft seal, 45 mm",        qty:75,   price:9.60,   date:"2026-10-06",
+       ackQty:75,   ackPrice:9.60,   ackDate:"2026-10-06"},
+      {ln:130, part:"CI-9910", desc:"Casting, ductile iron",           qty:15,   price:203.50, date:"2026-11-03",
+       ackQty:15,   ackPrice:203.51, ackDate:"2026-11-03"},
+      {ln:140, part:"PR-7710", desc:"Primer, grey, 20 L",              qty:6,    price:148.00, date:"2026-10-13",
+       ackQty:6,    ackPrice:148.00, ackDate:"2026-10-13"},
+      {ln:150, part:"TL-7720", desc:"Threadlocker, 250 ml",            qty:24,   price:31.20,  date:"2026-10-13",
+       ackQty:24,   ackPrice:31.20,  ackDate:"2026-10-13"}
+    ]
+  }
+];
+
+/* Every other open order. These carry real, editable lines too — nothing on
+   screen should tell you which three orders actually matter. */
+const FILLER = [
+  ["PO-48198","Acier Boisvert","2026-09-15",4],
+  ["PO-48201","Hydratek Fluid","2026-09-16",2],
+  ["PO-48205","Marchand Tool","2026-09-18",7],
+  ["PO-48209","Norex Fasteners","2026-09-18",9],
+  ["PO-48216","Vallée Plastiques","2026-09-24",3],
+  ["PO-48219","Kern Bearings","2026-09-25",5],
+  ["PO-48222","Atlas Gasket","2026-09-29",2],
+  ["PO-48225","Fonderie Lachance","2026-09-30",6],
+  ["PO-48231","Sirois Électrique","2026-10-02",8],
+  ["PO-48234","Beaudry Machining","2026-10-05",4],
+  ["PO-48237","Trilan Coatings","2026-10-07",1],
+  ["PO-48243","Cormier Rubber","2026-10-09",7],
+  ["PO-48246","Pelletier Steel","2026-10-13",5],
+  ["PO-48249","Windsor Hydraulics","2026-10-14",3],
+  ["PO-48252","Grenon Sheet Metal","2026-10-16",6],
+  ["PO-48255","Iberville Springs","2026-10-19",10],
+  ["PO-48258","Rothman Optics","2026-10-21",2],
+  ["PO-48261","Duguay Castings","2026-10-23",4],
+  ["PO-48264","Belmont Abrasives","2026-10-26",6],
+  ["PO-48267","Legault Welding","2026-10-28",3],
+  ["PO-48270","Kanata Circuit","2026-10-30",5]
+];
+
+const PARTS = [
+  ["HX","Hex bolt, grade 8, 1/2-13",0.42,500],
+  ["NU","Nylon lock nut, 1/2-13",0.18,800],
+  ["FW","Flat washer, hardened",0.09,1200],
+  ["SH","Shim stock, 0.50 mm",6.80,60],
+  ["BU","Bronze bushing, flanged",14.25,40],
+  ["SE","Rotary shaft seal, 45 mm",9.60,75],
+  ["GK","Gasket, compressed fibre",3.35,150],
+  ["TU","Steel tube, 2 in OD x 6 m",41.00,25],
+  ["PL","Plate, hot rolled 1/4 in",96.50,12],
+  ["AN","Angle, 2 x 2 x 1/4",27.40,30],
+  ["CA","Cable assembly, 3 m",52.00,20],
+  ["CN","Connector, 12-pin sealed",18.75,45],
+  ["FE","Filter element, 10 micron",23.10,35],
+  ["VB","Ball valve, 1 in NPT",64.00,18],
+  ["HH","Hydraulic hose, 1/2 in",38.90,22],
+  ["PK","Pump seal kit",112.00,8],
+  ["GM","Gearmotor, 0.5 hp",487.00,4],
+  ["CI","Casting, ductile iron",203.50,15],
+  ["PR","Primer, grey, 20 L",148.00,6],
+  ["TL","Threadlocker, 250 ml",31.20,24]
+];
+
+function seeded(str){
+  let h = 2166136261;
+  for (let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return () => { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; h >>>= 0; return h / 4294967296; };
+}
+function addDays(iso, n){
+  const d = new Date(Date.UTC(+iso.slice(0,4), +iso.slice(5,7)-1, +iso.slice(8,10)));
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0,10);
+}
+function fillerLines(po, n, due){
+  const r = seeded(po), base = Math.floor(r()*PARTS.length), out = [];
+  for (let i=0;i<n;i++){
+    const p = PARTS[(base + i*3) % PARTS.length];
+    out.push({
+      ln:(i+1)*10,
+      part:p[0] + "-" + (1000 + Math.floor(r()*8999)),
+      desc:p[1],
+      qty:Math.max(1, Math.round(p[3] * (0.6 + r()*0.9))),
+      price:+(p[2] * (0.85 + r()*0.35)).toFixed(2),
+      date:addDays(due, Math.floor(r()*21))
+    });
+  }
+  return out;
+}
+
+/* One flat list of orders. Scored ones are indistinguishable from the rest. */
+const POS = [];
+SCORED.forEach(p => POS.push({po:p.po, supplier:p.supplier, scored:true,
+  lines:p.lines.map(l => ({ln:l.ln, part:l.part, desc:l.desc, qty:l.qty, price:l.price, date:l.date}))}));
+FILLER.forEach(f => POS.push({po:f[0], supplier:f[1], scored:false, lines:fillerLines(f[0], f[3], f[2])}));
+POS.sort((a,b) => a.po.localeCompare(b.po));
+const POBY = {}; POS.forEach(p => POBY[p.po] = p);
+const SC_BY = {}; SCORED.forEach(p => SC_BY[p.po] = p);
+
+/* Inbox. Acknowledgements sit at index 3, 8 and 13 — you have to look. */
+const INBOX = [
+  {from:"Marie-Claude Fortin", addr:"mc.fortin@acierboisvert.ca", when:"08:12",
+   subj:"RE: RE: Shipment 4471 — carrier changed to Day & Ross",
+   body:"Hi,\n\nJust so you know, the carrier for shipment 4471 changed. Same ETA, new tracking to follow.\n\nMC"},
+  {from:"Epicor Support", addr:"no-reply@support.epicor.com", when:"07:58",
+   subj:"Ticket #77120 has been updated — awaiting your reply",
+   body:"Your ticket regarding the MRP regen schedule has been updated by our team. Please reply within 5 business days or the ticket will close automatically."},
+  {from:"Payables", addr:"ap@northbay-mfg.com", when:"07:41",
+   subj:"Invoice 88213 is past due — need PO match",
+   body:"Can you confirm the receipt against PO-48205? Invoice sitting on hold since Friday.\n\nThanks"},
+  {from:"Sylvain Trudel", addr:"ventes@metalika.ca", when:"07:36",
+   subj:"RE: PO-48213 — packaging question",
+   body:"Bonjour,\n\nQuick one before we release to the floor: do you want the brackets banded on skids or crated? Last time you asked for crates but the PO doesn't say.\n\nNo change to the order either way.\n\nSylvain"},
+  {from:"Quality", addr:"quality@northbay-mfg.com", when:"07:20",
+   subj:"NCR 2026-114 — disposition needed today",
+   body:"Two housings from last week's lot are out of flatness tolerance. Need scrap / rework / use-as-is decision before the shift meeting."},
+  {from:"Nadia Beaulieu", addr:"n.beaulieu@marchandtool.com", when:"Yesterday",
+   subj:"RFQ 2026-338 — our quote attached",
+   body:"Hi,\n\nQuote attached for the 12 line items on RFQ 2026-338. Pricing held for 30 days.\n\nNadia", attach:{name:"Quote_2026-338.pdf", kind:"quote"}},
+  {from:"Microsoft Outlook", addr:"postmaster@northbay-mfg.com", when:"Yesterday",
+   subj:"Automatic reply: Vacation until Sept 14",
+   body:"I am out of the office until September 14 with limited access to email. For urgent matters contact the purchasing desk."},
+  {from:"Kern Bearings", addr:"dispatch@kernbearings.com", when:"Yesterday",
+   subj:"Packing slip PS-99213 for your records",
+   body:"Attached is the packing slip for today's delivery. No action required.", attach:{name:"PS-99213.pdf", kind:"slip"}},
+  {from:"Planning", addr:"planning@northbay-mfg.com", when:"Yesterday",
+   subj:"Line 3 short on WS-2201 by Thursday",
+   body:"Heads up — we run out of weld studs Thursday afternoon unless the Métalika order lands on time. Can you confirm the date is still good?"},
+  {ackIdx:0, from:"Groupe Métalika", addr:"ventes@metalika.ca", when:"Yesterday",
+   subj:"Accusé de réception / Order acknowledgement — PO-48213",
+   body:"Bonjour,\n\nPlease find attached our acknowledgement for PO-48213.\n\nA few items were adjusted to match current shop loading and material pricing. Everything else is confirmed as ordered.\n\nMerci,\nSylvain Trudel\nGroupe Métalika"},
+  {from:"Trilan Coatings", addr:"billing@trilan.com", when:"Wed",
+   subj:"Statement of account — August 2026",
+   body:"Please find your monthly statement. Balance $940.00, due on receipt."},
+  {from:"Bruno Cardinal", addr:"b.cardinal@norexfasteners.com", when:"Wed",
+   subj:"Price increase notice effective January 1",
+   body:"Hi,\n\nWe're notifying customers of a 4% increase on all fastener lines effective January 1. Existing open orders are not affected.\n\nBruno"},
+  {from:"IT Helpdesk", addr:"it@northbay-mfg.com", when:"Wed",
+   subj:"Scheduled maintenance Saturday 22:00–02:00",
+   body:"The ERP will be unavailable during the maintenance window. Please save your work before leaving Friday."},
+  {from:"Receiving", addr:"receiving@northbay-mfg.com", when:"Wed",
+   subj:"Skid arrived without paperwork — Fonderie Lachance",
+   body:"We've got a skid on the dock from Lachance with no packing slip and no PO number on the label. Who owns this one?"},
+  {from:"Dana Whitfield", addr:"cs@nordak.com", when:"Wed",
+   subj:"Nordak lead times moving out in Q4",
+   body:"Hello,\n\nA general note to customers: composite panel lead times are moving from 6 to 9 weeks starting in Q4. This does not affect orders already acknowledged.\n\nRegards,\nDana"},
+  {from:"Sophie Nguyen", addr:"s.nguyen@northbay-mfg.com", when:"Tue",
+   subj:"Reminder: cycle count sign-off",
+   body:"Still need your sign-off on the September cycle count sheets before month end."},
+  {from:"Julie Delisle", addr:"orders@precisiondelisle.com", when:"Tue",
+   subj:"Capacity opening up in October",
+   body:"Bonjour,\n\nWe have machine time opening up the week of October 12 if you have anything you'd like to pull in.\n\nJulie"},
+  {from:"Health & Safety", addr:"hs@northbay-mfg.com", when:"Tue",
+   subj:"Forklift certification expires this month for 3 operators",
+   body:"Renewal session is booked for the 18th. Please confirm your team's attendance."}
+];
+
+const FIELD_LABEL = {qty:"Quantity", price:"Unit price", date:"Delivery date"};
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let S = null;
+
+function blankERP(){
+  const e = {};
+  POS.forEach(p => e[p.po] = {lines:p.lines.map(l => ({qty:l.qty, price:l.price, date:l.date, touched:{}}))});
+  return e;
+}
+
+/* Everything that arrived before the acknowledgement has already been read,
+   so the one that matters is the only unread line in the list. */
+function seedRead(){
+  const r = {};
+  INBOX.forEach((m,i) => { if (m.ackIdx === undefined) r[i] = true; });
+  return r;
+}
+
+function reset(){
+  S = {
+    screen:"intro",
+    manual:{erp:blankERP(), po:null, msg:null, read:seedRead(), started:false, t0:0, ms:0},
+    axya:{erp:blankERP(), po:null, dec:{}, sel:{}, hl:null, view:"orders", viewPo:null, started:false, t0:0, ms:0, emails:[]},
+    result:null
+  };
+}
+
+/* every field where the acknowledgement disagrees with the ERP */
+function discrepancies(){
+  const out = [];
+  SCORED.forEach(p => p.lines.forEach((l,li) => {
+    if (l.uom) return;   // totals agree — the parser resolves this one itself
+    if (l.ackQty   !== l.qty)   out.push({po:p.po, li, field:"qty",   from:l.qty,   to:l.ackQty});
+    if (l.ackPrice !== l.price) out.push({po:p.po, li, field:"price", from:l.price, to:l.ackPrice});
+    if (l.ackDate  !== l.date)  out.push({po:p.po, li, field:"date",  from:l.date,  to:l.ackDate});
+  }));
+  return out;
+}
+const ALL_DISC = discrepancies();
+const TOTAL = ALL_DISC.length;
+const CHANGED_LINES = new Set(ALL_DISC.map(d => d.po + "-" + d.li)).size;
+const PO = SCORED[0].po;
+const AUTO = [];
+SCORED.forEach(p => p.lines.forEach((l,li) => { if (l.uom) AUTO.push({po:p.po, li, line:l}); }));
+const CLEAN_LINES = SCORED[0].lines.length - CHANGED_LINES - AUTO.length;
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const money = n => "$" + Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+const clock = ms => {
+  const t = Math.max(0, Math.floor(ms/1000));
+  return String(Math.floor(t/60)).padStart(2,"0") + ":" + String(t%60).padStart(2,"0");
+};
+const niceDate = d => {
+  const [y,m,dd] = d.split("-");
+  return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][+m-1] + " " + (+dd) + ", " + y;
+};
+const val = (f,v) => f === "price" ? money(v) : f === "date" ? niceDate(v) : String(v);
+
+let tick = null;
+function startClock(which){
+  S[which].t0 = Date.now();
+  stopClock();
+  tick = setInterval(() => {
+    S[which].ms = Date.now() - S[which].t0;
+    const el = $("#clock");
+    if (el) el.textContent = clock(S[which].ms);
+  }, 200);
+}
+function stopClock(){ if (tick) { clearInterval(tick); tick = null; } }
+
+function beginRound(which){
+  if (S[which].started) return;
+  S[which].started = true;
+  const c = $("#clock"); if (c) c.classList.remove("idle");
+  const p = $("#prog"); if (p) p.textContent = "";
+  const br = document.querySelector(".brief-veil");
+  if (br) br.remove();
+  const b = document.querySelector(".btn-start");
+  if (b) b.outerHTML = which === "manual"
+    ? '<button class="btn-finish" data-a="finish-manual">Finish</button>'
+    : '<button class="btn-finish" data-a="finish-axya" id="axfinish" disabled style="opacity:.4">Finish</button>';
+  startClock(which);
+  if (which === "axya") refreshAxya();
+}
+
+let toastT = null;
+function toast(msg){
+  const old = $(".toast"); if (old) old.remove();
+  const d = document.createElement("div");
+  d.className = "toast"; d.textContent = msg;
+  document.body.appendChild(d);
+  clearTimeout(toastT);
+  toastT = setTimeout(() => d.remove(), 2600);
+}
+
+/* ============================================================
+   SCREEN 1 — RULES
+   ============================================================ */
+function screenIntro(){
+  stopClock();
+  return `<div class="stage"><div class="stage-inner">
+    <p class="kicker">Axya booth challenge</p>
+    <h1 class="big">Your suppliers changed your orders. Nobody flagged it.</h1>
+    <p class="lede">An acknowledgement landed in your inbox overnight. Your ERP says one thing, the PDF says another: dates that slipped, prices that moved, quantities that shrank. None of it is marked.</p>
+    <div class="cta-row">
+      <button class="cta" data-a="start-manual">Let&rsquo;s go</button>
+      <span class="fineprint" style="margin:0">Two rounds: once on your own, once with Axya.</span>
+    </div>
+  </div></div>`;
+}
+
+/* ============================================================
+   SCREEN 2 — MANUAL ROUND
+   ============================================================ */
+function screenManual(){
+  const go = S.manual.started;
+  if (!go) stopClock();
+  return `
+  <div class="bar">
+    <div class="bar-mode"><span class="dot" style="background:#D8695B"></span>Round 1 — the way it works today</div>
+    <div class="bar-prog" id="prog"></div>
+    <div class="clock ${go?"":"idle"}" id="clock">00:00</div>
+    ${go ? `<button class="btn-finish" data-a="finish-manual">Finish</button>`
+         : `<button class="btn-start" data-a="run-manual">Start the clock</button>`}
+  </div>
+  <div class="split">
+    <div class="pane-l">${erpPane("manual")}</div>
+    <div class="pane-r">${mailPane()}</div>
+  </div>
+  ${go ? "" : briefManual()}`;
+}
+
+function briefManual(){
+  return `<div class="brief-veil"><div class="brief">
+    <p class="kicker" style="margin-bottom:12px">Round 1: the way it works today</p>
+    <h2 class="brief-h">Here is the job</h2>
+    <p class="brief-l">Your ERP is on the left, this morning&rsquo;s inbox on the right. A supplier has acknowledged one of your orders and quietly changed part of it.</p>
+    <div class="rules">
+      <div class="rule"><div class="rule-n">1</div><div class="rule-t">Find the acknowledgement in the inbox<small>It is the only unread message in the list.</small></div></div>
+      <div class="rule"><div class="rule-n">2</div><div class="rule-t">Open the attachment, compare it against the order in the ERP<small>Line by line: quantity, unit price, delivery date.</small></div></div>
+      <div class="rule"><div class="rule-n">3</div><div class="rule-t">Correct the ERP to match what the supplier confirmed<small>Click a line and edit it in place.</small></div></div>
+      <div class="rule"><div class="rule-n">4</div><div class="rule-t">Press Finish when you think you are done<small>We show you the clock, and what you missed.</small></div></div>
+    </div>
+    <div class="brief-foot">
+      <button class="cta" data-a="run-manual">Start</button>
+      <span class="fineprint">The clock starts the moment you press it.</span>
+    </div>
+  </div></div>`;
+}
+
+function briefAxya(){
+  return `<div class="brief-veil"><div class="brief">
+    <p class="kicker" style="margin-bottom:12px">Round 2: the same order, in Axya</p>
+    <h2 class="brief-h">Now let Axya read it</h2>
+    <p class="brief-l">Same purchase order, same acknowledgement, same changes. The difference: the PDF was read and compared against your order lines before you sat down.</p>
+    <div class="rules">
+      <div class="rule"><div class="rule-n">1</div><div class="rule-t">The parser already compared all ${SCORED[0].lines.length} lines<small>Changes are highlighted, matches are ticked, one line resolved itself.</small></div></div>
+      <div class="rule"><div class="rule-n">2</div><div class="rule-t">Accept a change and the order line updates itself<small>One at a time, or tick several and confirm them together.</small></div></div>
+      <div class="rule"><div class="rule-n">3</div><div class="rule-t">Ask for a revision and the supplier gets an email<small>Anything outside your price tolerance is flagged.</small></div></div>
+      <div class="rule"><div class="rule-n">4</div><div class="rule-t">Press Finish once the list is clear<small>Then we compare the two clocks.</small></div></div>
+    </div>
+    <div class="brief-foot">
+      <button class="cta" data-a="run-axya">Start</button>
+      <span class="fineprint">The clock starts the moment you press it.</span>
+    </div>
+  </div></div>`;
+}
+
+function erpPane(mode){
+  const editable = mode === "manual";
+  return `<div class="erp">
+    <div class="erp-title">Meridian ERP 9.2 — Purchase Order Entry <span>PURCH01 · Plant 100</span></div>
+    <div class="erp-menu"><u>F</u>ile <u>E</u>dit <u>V</u>iew <u>A</u>ctions <u>H</u>elp</div>
+    <div class="erp-toolbar">
+      <button class="erp-btn" data-a="noop">New</button>
+      <button class="erp-btn" data-a="noop">Refresh</button>
+      <span style="margin-left:6px">Find PO:</span>
+      <input class="erp-search" id="posearch" placeholder="PO or supplier">
+      <span style="margin-left:auto;color:#3a4048">Open orders: ${POS.length}</span>
+    </div>
+    <div class="erp-secthead">Open purchase orders</div>
+    <div class="erp-scroll" style="flex:0 0 30%" id="polist">${poRows(mode)}</div>
+    <div class="erp-secthead" id="linehead">Order lines — select an order above</div>
+    <div class="erp-scroll" style="flex:1" id="polines"><div class="erp-empty">No order selected.</div></div>
+    <div class="erp-status"><span id="erpstatus">Ready</span><span>${mode==="axya"?"Updated by Axya":"CAPS  NUM"}</span></div>
+  </div>`;
+}
+
+function poRows(mode, filter){
+  const sel = S[mode].po;
+  const f = (filter||"").trim().toUpperCase();
+  const rows = POS.filter(r => !f || r.po.toUpperCase().includes(f) || r.supplier.toUpperCase().includes(f));
+  if (!rows.length) return `<div class="erp-empty">No orders match "${esc(filter)}".</div>`;
+  return `<table class="erp-grid"><thead><tr>
+      <th>PO number</th><th>Supplier</th><th>Status</th><th class="num">Lines</th><th>Earliest due</th><th class="num">Order value</th>
+    </tr></thead><tbody>${rows.map(r => {
+      const st = S[mode].erp[r.po];
+      const due = st.lines.map(l => l.date).sort()[0];
+      const tot = st.lines.reduce((a,l) => a + l.qty*l.price, 0);
+      return `<tr class="po-row ${r.po===sel?"sel":""}" data-a="pick-po" data-po="${r.po}" data-mode="${mode}">
+        <td>${r.po}</td><td>${esc(r.supplier)}</td><td>Open</td>
+        <td class="num">${st.lines.length}</td><td>${due}</td><td class="num">${money(tot)}</td>
+      </tr>`;
+    }).join("")}</tbody></table>`;
+}
+
+function lineRows(mode){
+  const id = S[mode].po;
+  if (!id) return `<div class="erp-empty">No order selected.</div>`;
+  const p = POBY[id], st = S[mode].erp[id];
+  const editable = mode === "manual";
+  return `<table class="erp-grid"><thead><tr>
+      <th>Ln</th><th>Part</th><th>Description</th><th class="num">Qty</th><th class="num">Unit price</th><th>Due date</th><th class="num">Ext.</th>
+    </tr></thead><tbody>${p.lines.map((l,li) => {
+      const s = st.lines[li];
+      const cell = (f, cls, type, v) => editable
+        ? `<input class="erp-input ${cls} ${s.touched[f]?"touched":""}" type="${type}" value="${v}" data-edit="${f}" data-li="${li}" ${type==="number"?'step="0.01"':""}>`
+        : `<span class="${s.touched[f]?"":""}" data-cellv="${mode}-${li}-${f}">${f==="price"?money(v):v}</span>`;
+      const hl = (mode === "axya" && S.axya.hl === li) ? ' class="erp-hl"' : "";
+      return `<tr${hl}>
+        <td class="num">${l.ln}</td><td>${l.part}</td><td>${esc(l.desc)}</td>
+        <td class="num">${cell("qty","q","number",s.qty)}</td>
+        <td class="num">${cell("price","p","number",s.price)}</td>
+        <td>${cell("date","d","date",s.date)}</td>
+        <td class="num">${money(s.qty*s.price)}</td>
+      </tr>`;
+    }).join("")}</tbody></table>`;
+}
+
+function initials(name){
+  return name.split(/\s+/).filter(Boolean).slice(0,2).map(w => w[0].toUpperCase()).join("");
+}
+
+function mailPane(){
+  const unread = INBOX.length - Object.keys(S.manual.read).length;
+  return `<div class="ol">
+    <div class="ol-title"><span class="sq"></span>Inbox — purchasing@northbay-mfg.com — Outlook</div>
+    <div class="ol-tabs">
+      <div class="ol-tab">File</div><div class="ol-tab on">Home</div>
+      <div class="ol-tab">Send / Receive</div><div class="ol-tab">Folder</div><div class="ol-tab">View</div>
+    </div>
+    <div class="ol-ribbon">
+      <button class="ol-cmd" data-a="noop"><span class="ic">✉</span>New Email</button>
+      <button class="ol-cmd" data-a="noop"><span class="ic red">✕</span>Delete</button>
+      <button class="ol-cmd" data-a="noop"><span class="ic">↩</span>Reply</button>
+      <button class="ol-cmd" data-a="noop"><span class="ic">↩↩</span>Reply All</button>
+      <button class="ol-cmd" data-a="noop"><span class="ic">↪</span>Forward</button>
+    </div>
+    <div class="ol-body">
+      <div class="ol-folders">
+        <div class="ol-fgroup">Favourites</div>
+        <div class="ol-fold on">Inbox <b id="foldcount">${unread}</b></div>
+        <div class="ol-fold">Drafts <b>2</b></div>
+        <div class="ol-fold">Sent Items</div>
+        <div class="ol-fold">Deleted Items <b>41</b></div>
+        <div class="ol-fgroup" style="padding-top:12px">Folders</div>
+        <div class="ol-fold">Suppliers</div>
+        <div class="ol-fold">Acknowledgements</div>
+        <div class="ol-fold">Quotes</div>
+      </div>
+      <div class="ol-main">
+        <div class="ol-listhdr"><b>All</b><span id="olunread">${unread} unread</span></div>
+        <div class="ol-list" id="msglist">${msgRows()}</div>
+        <div class="ol-read" id="msgread"><div class="ol-empty">Select an item to read.</div></div>
+      </div>
+    </div>
+    <div class="ol-status"><span id="olstatus">${INBOX.length} items</span><span>Connected to Microsoft Exchange</span></div>
+  </div>
+  <div id="docslot"></div>`;
+}
+
+function msgRows(){
+  return INBOX.map((m,i) => `
+    <div class="ol-msg ${S.manual.msg===i?"sel":""} ${S.manual.read[i]?"":"unread"}" data-a="pick-msg" data-i="${i}">
+      <div class="ol-col">
+        <div class="ol-from"><span>${esc(m.from)}</span><span class="ol-date">${m.when}</span></div>
+        <div class="ol-subj">${esc(m.subj)}</div>
+        <div class="ol-prev">${esc(m.body.split("\n")[0]).slice(0,80)}</div>
+      </div>
+      ${(m.attach || m.ackIdx !== undefined) ? '<div class="ol-clip">📎</div>' : ""}
+    </div>`).join("");
+}
+
+function msgRead(){
+  const i = S.manual.msg;
+  if (i === null) return `<div class="ol-empty">Select an item to read.</div>`;
+  const m = INBOX[i];
+  let att = "";
+  if (m.ackIdx !== undefined){
+    const p = SCORED[m.ackIdx];
+    att = `<div class="ol-attach"><div class="ol-attach-lab">1 attachment</div>
+      <button class="ol-chip" data-a="open-pdf" data-ack="${m.ackIdx}">
+        <span class="pdf-ico">PDF</span> ${p.ack}_${p.po}.pdf <span style="color:#605e5c">84 KB</span></button></div>`;
+  } else if (m.attach){
+    att = `<div class="ol-attach"><div class="ol-attach-lab">1 attachment</div>
+      <button class="ol-chip" data-a="open-other" data-kind="${m.attach.kind}">
+        <span class="pdf-ico">PDF</span> ${esc(m.attach.name)} <span style="color:#605e5c">62 KB</span></button></div>`;
+  }
+  return `<h3 class="ol-rsubj">${esc(m.subj)}</h3>
+    <div class="ol-sender">
+      <div class="ol-av">${initials(m.from)}</div>
+      <div style="min-width:0">
+        <div class="ol-sname">${esc(m.from)}</div>
+        <div class="ol-saddr">${esc(m.addr)}</div>
+        <div class="ol-saddr">To: purchasing@northbay-mfg.com</div>
+      </div>
+      <div class="ol-when">${m.when}</div>
+    </div>
+    <div class="ol-acts">
+      <button class="ol-act" data-a="noop">Reply</button>
+      <button class="ol-act" data-a="noop">Reply All</button>
+      <button class="ol-act" data-a="noop">Forward</button>
+    </div>
+    <div class="ol-text">${esc(m.body)}</div>${att}`;
+}
+
+/* ---- the acknowledgement PDF, opened inside the mail panel ---- */
+function docBar(name){
+  return `<div class="doc-bar">
+    <button class="doc-back" data-a="close-doc"><span class="arw">←</span> Inbox</button>
+    <span class="doc-name">${esc(name)}</span>
+    <span class="doc-page">Page 1 of 1</span>
+    <button class="doc-zoom" data-a="noop" aria-label="Zoom out">−</button>
+    <button class="doc-zoom" data-a="noop" aria-label="Zoom in">+</button>
+  </div>`;
+}
+
+function ackSheetHTML(hl){
+  const p = SCORED[0];
+  const merch = p.lines.reduce((t,l) => t + l.ackQty * l.ackPrice, 0);
+  const freight = 185.00, tax = (merch + freight) * 0.14975;
+  return `<div class="sheet">
+    <div class="lh">
+      <div><div class="lh-co">${esc(p.supplier)}</div>
+        <div class="lh-addr">2440 boulevard Industriel<br>${esc(p.city)}  H7S 1P7<br>${p.email}</div></div>
+      <div class="lh-doc">ORDER ACKNOWLEDGEMENT<small>No. ${p.ack}<br>${niceDate(p.ackDate)}</small></div>
+    </div>
+
+    <div class="docmeta">
+      <div><span>Your order</span><b>${p.po}</b></div>
+      <div><span>Buyer</span><b>Northbay Mfg</b></div>
+      <div><span>Contact</span><b>S. Trudel</b></div>
+      <div><span>Terms</span><b>Net 30</b></div>
+      <div><span>Incoterm</span><b>FCA shipping point</b></div>
+      <div><span>Currency</span><b>CAD</b></div>
+      <div><span>Lines</span><b>${p.lines.length}</b></div>
+      <div><span>Revision</span><b>A</b></div>
+    </div>
+
+    <p class="intro">We confirm receipt of your order above. The quantities, prices and ship dates below are
+      confirmed for production and shipment. Any line not listed is not part of this acknowledgement.</p>
+
+    <table class="ack"><thead><tr>
+      <th class="k-ln">Line</th><th>Item</th><th>Description</th>
+      <th class="k-n">Qty conf.</th><th class="k-n">Unit price</th><th>Ship date</th><th class="k-n">Amount</th>
+    </tr></thead><tbody>${p.lines.map((l,i) => `<tr class="${hl === i ? "pdf-hl" : ""}">
+      <td class="k-ln">${l.ln}</td>
+      <td class="k-it">${l.part}</td>
+      <td class="k-ds">${esc(l.desc)}</td>
+      <td class="k-n">${l.ackQty}</td>
+      <td class="k-n">${money(l.ackPrice)}</td>
+      <td>${niceDate(l.ackDate)}</td>
+      <td class="k-n">${money(l.ackQty * l.ackPrice)}</td>
+    </tr>`).join("")}</tbody></table>
+
+    <div class="totwrap"><table class="tot">
+      <tr><td class="l">Merchandise</td><td class="v">${money(merch)}</td></tr>
+      <tr><td class="l">Freight, prepaid and charged</td><td class="v">${money(freight)}</td></tr>
+      <tr><td class="l">GST and QST, 14.975%</td><td class="v">${money(tax)}</td></tr>
+      <tr class="grand"><td class="l">Total, CAD</td><td class="v">${money(merch + freight + tax)}</td></tr>
+    </table></div>
+
+    <div class="sheet-terms"><b>Terms.</b> Prices are firm for the quantities confirmed above and are subject to
+      raw material surcharges in effect at time of shipment. Ship dates reflect current shop loading and are given
+      ex works. Quantities are confirmed to the nearest standard lot, and partial shipment is permitted unless
+      otherwise agreed in writing. This acknowledgement supersedes prior correspondence relating to this order.</div>
+
+    <div class="sheet-foot"><span>${esc(p.supplier)} \u00B7 ${p.ack} \u00B7 ${p.po}</span><span>Page 1 of 1</span></div>
+  </div>`;
+}
+
+function pdfSheet(ai){
+  const p = SCORED[ai];
+  return `<div class="docview">${docBar(p.ack + "_" + p.po + ".pdf")}<div class="doc-scroll">${ackSheetHTML(null)}</div></div>`;
+}
+
+function decoySheet(kind){
+  const q = kind === "quote";
+  return `<div class="docview">${docBar(q ? "Quote_2026-338.pdf" : "PS-99213.pdf")}<div class="doc-scroll"><div class="sheet">
+    <div class="lh">
+      <div><div class="lh-co">${q?"Marchand Tool":"Kern Bearings"}</div>
+        <div class="lh-addr">${q?"Saint-Jérôme, QC":"Cambridge, ON"}</div></div>
+      <div class="lh-doc">${q?"QUOTATION":"PACKING SLIP"}<small>${q?"RFQ 2026-338":"PS-99213"}</small></div>
+    </div>
+    <p class="intro">${q
+      ? "Pricing below is offered against your request for quotation. This is a quotation only — no order has been placed and no acknowledgement is implied."
+      : "Goods listed below were shipped against an order already received and closed. No acknowledgement or price confirmation is included with this document."}</p>
+    <table class="ack"><thead><tr>
+      <th class="k-ln">Line</th><th>Item</th><th>Description</th><th class="k-n">Qty</th>
+    </tr></thead><tbody>${q
+      ? `<tr><td class="k-ln">1</td><td class="k-it">TL-3301</td><td class="k-ds">Carbide end mill, 12 mm</td><td class="k-n">24</td></tr>
+         <tr><td class="k-ln">2</td><td class="k-it">TL-3312</td><td class="k-ds">Insert holder, 20 mm shank</td><td class="k-n">6</td></tr>`
+      : `<tr><td class="k-ln">1</td><td class="k-it">BR-7702</td><td class="k-ds">Tapered roller bearing</td><td class="k-n">40</td></tr>
+         <tr><td class="k-ln">2</td><td class="k-it">BR-7710</td><td class="k-ds">Bearing seal kit</td><td class="k-n">40</td></tr>`}
+    </tbody></table>
+    <div class="sheet-terms">Nothing on this document requires a change to an open purchase order.</div>
+    <div class="sheet-foot"><span>${q?"Quotation":"Packing slip"}</span><span>Page 1 of 1</span></div>
+  </div></div></div>`;
+}
+
+/* ============================================================
+   SCORING
+   ============================================================ */
+function scoreManual(){
+  const rows = ALL_DISC.map(d => {
+    const cur = S.manual.erp[d.po].lines[d.li][d.field];
+    const ok = d.field === "date" ? cur === d.to : Math.abs(Number(cur) - d.to) < 0.005;
+    return Object.assign({}, d, {ok});
+  });
+  return {rows, found: rows.filter(r => r.ok).length};
+}
+
+/* ============================================================
+   SCREEN 3 — MANUAL RESULT
+   ============================================================ */
+function screenManualResult(){
+  stopClock();
+  const rows = S.result.rows, found = S.result.found;
+  const ms = S.manual.ms, missed = TOTAL - found;
+  const head = found === TOTAL ? "You got all of them."
+    : missed === 1 ? "One got past you." : missed + " got past you.";
+  const sub = found === TOTAL
+    ? "A clean sweep, and it cost you " + clock(ms) + " of your morning, on one order out of the hundreds you will touch this quarter."
+    : "Every one of those is a wrong date, a wrong price or a wrong quantity now sitting in your ERP, driving your production plan.";
+  return `<div class="stage"><div class="stage-inner">
+    <p class="kicker">Round 1 complete</p>
+    <h1 class="big" style="margin-bottom:16px">${head}</h1>
+    <p class="lede">${sub}</p>
+    <div class="metric-row">
+      <div class="metric"><div class="accentbar"></div><div class="metric-v">${clock(ms)}</div>
+        <div class="metric-l">Time on one order</div>
+        <div class="metric-d">${SCORED[0].lines.length} lines, one acknowledgement.</div></div>
+      <div class="metric"><div class="accentbar"></div><div class="metric-v">${found}<small>of ${TOTAL}</small></div>
+        <div class="metric-l">Changes caught</div>
+        <div class="metric-d">Quantity, unit price and delivery date across ${CHANGED_LINES} lines.</div></div>
+      <div class="metric"><div class="accentbar"></div><div class="metric-v">${missed}</div>
+        <div class="metric-l">Still wrong in the ERP</div>
+        <div class="metric-d">${missed ? "Nobody downstream knows." : "Nothing left to correct."}</div></div>
+    </div>
+    <div class="miss-list">${rows.map(r => `
+      <div class="miss">
+        <span class="vpill ${r.ok?"caught":"missed"}">${r.ok?"Caught":"Missed"}</span>
+        <div class="miss-po">${r.po}, line ${SC_BY[r.po].lines[r.li].ln}</div>
+        <div class="miss-txt">${FIELD_LABEL[r.field]}. Supplier confirmed <b>${val(r.field,r.to)}</b>, your order said <b>${val(r.field,r.from)}</b>.</div>
+      </div>`).join("")}</div>
+    <div class="cta-row"><button class="cta" data-a="start-axya">Now try it with Axya</button></div>
+    <p class="fineprint">Same order, same changes. You start the clock yourself.</p>
+  </div></div>`;
+}
+
+/* ============================================================
+   SCREEN 4 — AXYA ROUND
+   ============================================================ */
+function screenAxya(){
+  const go = S.axya.started;
+  if (!go) stopClock();
+  return `
+  <div class="bar">
+    <div class="bar-mode"><span class="dot" style="background:#7C6BFF"></span>Round 2 — the same order, in Axya</div>
+    <div class="bar-prog" id="prog"></div>
+    <div class="clock ${go?"":"idle"}" id="clock">00:00</div>
+    ${go ? `<button class="btn-finish" data-a="finish-axya" id="axfinish" disabled style="opacity:.4">Finish</button>`
+         : `<button class="btn-start" data-a="run-axya">Start the clock</button>`}
+  </div>
+  <div class="axfull">${axyaPane()}</div>
+  ${go ? "" : briefAxya()}`;
+}
+
+/* Deterministic order-book statuses so the list looks the same every run. */
+const ORD = POS.map(o => {
+  if (o.po === PO) return {o, kind:"review"};
+  const r = seeded(o.po + "s")();
+  const kind = r < 0.42 ? "track" : r < 0.62 ? "shipped" : r < 0.78 ? "waiting" : r < 0.9 ? "risk" : "partial";
+  return {o, kind};
+});
+const ORD_LABEL = {
+  review:  ["review","Partially acknowledged"],
+  track:   ["blue","On track"],
+  shipped: ["green","Shipped"],
+  waiting: ["blue","Waiting for order confirmation"],
+  risk:    ["amber","At risk: not acknowledged yet"],
+  partial: ["blue","Partially acknowledged"]
+};
+const ORD_ICON = {review:"\u25B6",track:"\u25B6",shipped:"\u{1F69A}",waiting:"\u25D5",risk:"!",partial:"\u25B6"};
+
+function axyaPane(){
+  return `<div class="axapp">
+    <div class="axtop">
+      <div class="axtop-logo"><span class="mk"></span>Axya</div>
+      <div class="axtop-sel">Orders <span style="opacity:.6">\u2304</span></div>
+      <div class="axtop-search">\u2315 Search <span class="kbd">Ctrl /</span></div>
+      <div class="axtop-ask"><span class="spark">\u2726</span> Ask a question <span class="kbd">Ctrl K</span></div>
+    </div>
+    <div class="axview" id="axwrap">${axInner()}</div>
+  </div>`;
+}
+
+function axInner(){ return S.axya.view === "bench" ? wbInner() : ordersInner(); }
+
+function ordersInner(){
+  const open = openChanges();
+  const counts = {};
+  ORD.forEach(e => counts[e.kind] = (counts[e.kind]||0) + 1);
+  const n = k => counts[k] || 0;
+  return `<div class="ord">
+    <div class="ord-filters">
+      <button class="fchip" data-a="noop">\u2304 Buyer <span class="val">Northbay Mfg</span> \u2715</button>
+      <button class="fchip" data-a="noop">\u2304 Tag</button>
+      <button class="fchip" data-a="noop">\u2304 Focused view</button>
+      <button class="fchip" data-a="noop">\u2304 More filters</button>
+      <button class="fchip create" data-a="noop">\uFF0B Create</button>
+    </div>
+    <div class="ord-stats">
+      <button class="schip on" data-a="noop">All statuses <span class="n">${ORD.length}</span></button>
+      <button class="schip" data-a="noop"><span class="ic" style="color:#1F5FBF">\u25B6</span>On track <span class="n">${n("track")}</span></button>
+      <button class="schip" data-a="noop"><span class="ic" style="color:#9C5514">!</span>At risk <span class="n">${n("risk")}</span></button>
+      <button class="schip" data-a="noop"><span class="ic">\u{1F69A}</span>Shipped <span class="n">${n("shipped")}</span></button>
+      <button class="schip" data-a="noop"><span class="ic" style="color:#1F5FBF">\u25B6</span>Partially acknowledged <span class="n">${n("partial")+n("review")}</span></button>
+      <button class="schip" data-a="noop">Archived <span class="n">211</span></button>
+      <span class="ord-page">1\u2013${ORD.length} of ${ORD.length}</span>
+    </div>
+    <div class="ord-hint"><span class="spark">\u2726</span><span>${open.length
+      ? `An order confirmation came in overnight. Axya read it and found <b>${open.length} change${open.length>1?"s":""}</b> \u2014 open the flagged order to review them.`
+      : `Every confirmation on this order book is reconciled.`}</span></div>
+    <div class="ord-scroll">
+      <table class="ordg"><thead><tr>
+        <th>Name</th><th>Users</th><th>Items</th><th>Supplier</th>
+        <th>Sent on</th><th>Required reception</th><th>Status</th><th>Shipping prog.</th><th>Internal note</th>
+      </tr></thead><tbody>
+        ${ORD.map(e => {
+          const o = e.o, st = S.axya.erp[o.po];
+          const due = st.lines.map(l => l.date).sort()[0];
+          const lab = ORD_LABEL[e.kind];
+          const flag = e.kind === "review";
+          const total = st.lines.length;
+          const shipped = flag ? 0 : Math.max(0, total - (e.kind === "shipped" ? 0 : 1));
+          const ring = shipped === total ? "full" : shipped ? "part" : "";
+          const who = seeded(o.po)() < .5 ? "AP" : "YB";
+          return `<tr class="${flag?"flagged":""}" data-a="open-order" data-po="${o.po}">
+            <td><span class="o-name">${o.po}</span></td>
+            <td><span class="who">${who}</span></td>
+            <td>${total}</td>
+            <td><span class="supp"><span class="dotc"></span>${esc(o.supplier)}</span></td>
+            <td>${addDays(due,-21)}</td>
+            <td>${due}</td>
+            <td>${flag && open.length
+              ? `<span class="st needs"><span class="warn">\u26A0</span> Action required \u00B7 ${open.length} change${open.length>1?"s":""} to review</span>`
+              : `<span class="st ${flag?"green":lab[0]}">${flag?"\u2713":ORD_ICON[e.kind]} ${flag?"Acknowledged \u00B7 reconciled":lab[1]}</span>`}</td>
+            <td><span class="prog"><span class="ring ${ring}"></span>${shipped}/${total}</span></td>
+            <td><span class="tagph">Add a tag</span></td>
+          </tr>`;
+        }).join("")}
+      </tbody></table>
+    </div>
+  </div>`;
+}
+
+function noReviewInner(po){
+  return `<div class="wb">
+    <div class="wb-crumb">
+      <button class="wb-back" data-a="back-orders"><span>\u2190</span> All orders</button>
+      <span class="wb-crumb-t">Orders / <b>${po}</b></span>
+    </div>
+    <div class="ins" style="border:0">
+      <div class="ins-h"><span class="spark">\u2726</span> AI Insights</div>
+      <div class="ins-card"><div class="ins-lab">NOTHING TO REVIEW</div>
+        <div class="ins-note">No order confirmation has come back from ${esc(POBY[po].supplier)} yet. There is nothing to reconcile on this order.</div></div>
+    </div>
+  </div>`;
+}
+
+const key = d => d.po + "-" + d.li + "-" + d.field;
+const findChange = li => ALL_DISC.find(d => d.li === li);
+const openChanges = () => ALL_DISC.filter(d => !S.axya.dec[key(d)]);
+
+/* one change is deliberately outside tolerance so the visitor sees the reject path */
+const outOfTolerance = d => d.field === "price" && (d.to - d.from) / d.from > 0.10;
+
+const dayGap = (a,b) => Math.round(
+  (Date.UTC(+b.slice(0,4), +b.slice(5,7)-1, +b.slice(8,10)) -
+   Date.UTC(+a.slice(0,4), +a.slice(5,7)-1, +a.slice(8,10))) / 86400000);
+
+const TIP = {
+  qty:  d => ["Quantity changed",
+    "Confirmed quantity differs: PO " + d.from + " vs supplier " + d.to +
+    " (" + (d.to > d.from ? "+" : "") + (d.to - d.from) + " units). Unit price and date agree."],
+  price:d => {
+    const delta = d.to - d.from, pct = (delta / d.from) * 100;
+    return ["Unit price changed",
+      "Unit price differs: PO " + money(d.from) + " vs supplier " + money(d.to) +
+      ", up " + money(delta) + " per unit" + (Math.abs(pct) >= 1 ? " (" + pct.toFixed(1) + "%)" : "") +
+      ". Quantity and date agree."];
+  },
+  date: d => {
+    const g = dayGap(d.from, d.to);
+    return ["Delivery date changed",
+      "Delivery date shifted: PO " + d.from + " vs supplier " + d.to +
+      " (" + Math.abs(g) + " day" + (Math.abs(g) === 1 ? "" : "s") + " " + (g > 0 ? "later" : "earlier") +
+      "). Quantity and price agree."];
+  }
+};
+
+function wbInner(){
+  if (S.axya.viewPo && S.axya.viewPo !== PO) return noReviewInner(S.axya.viewPo);
+  const open = openChanges();
+  const sel = Object.keys(S.axya.sel).filter(k => S.axya.sel[k] && !S.axya.dec[k]);
+  const lines = SCORED[0].lines;
+  const al = AUTO.length ? AUTO[0].line : null;
+  const done = Object.keys(S.axya.dec).length;
+  return `<div class="wb">
+  <div class="wb-crumb">
+    <button class="wb-back" data-a="back-orders"><span>\u2190</span> All orders</button>
+    <span class="wb-crumb-t">Orders / <b>${PO}</b> \u00B7 ${esc(SCORED[0].supplier)}</span>
+    ${open.length ? `<span class="pill amber">${open.length} to review</span>`
+                  : `<span class="pill green">All changes handled</span>`}
+  </div>
+  <div class="wb-cols">
+
+    <div class="wb-pdf">
+      <div class="pdfhead">
+        <span class="pdftag">Confirmation</span>
+        <span class="pdfname">${SCORED[0].ack}_${PO}.pdf</span>
+        <span class="pdfdate">${niceDate(SCORED[0].ackDate)}</span>
+        <span class="pdfpg">1/1 <span style="opacity:.5">\u2303 \u2304</span></span>
+      </div>
+      <div class="pdfsearch"><span>\u2315</span> Search in PDF...</div>
+      <div class="pdf-scroll" id="pdfpane">${ackSheetHTML(S.axya.hl)}</div>
+    </div>
+
+    <div class="wb-main">
+      <div class="wb-bar">
+        <div class="wb-brand"><span class="spark">\u2726</span> AI Parser</div>
+        ${open.length ? `<span class="pill amber">${open.length} to review</span>`
+                      : `<span class="pill green">Nothing to review</span>`}
+        <span class="pill green">${AUTO.length} AI-resolved</span>
+      </div>
+      <div class="wb-tools">
+        <button class="wb-btn" data-a="noop">Columns</button>
+        <button class="wb-btn primary" data-a="confirm-selected" ${sel.length?"":"disabled"}>
+          Confirm ${sel.length ? sel.length + " change" + (sel.length>1?"s":"") : "changes"}</button>
+      </div>
+      <div class="wb-tip"><span class="spark">\u2726</span><span>Tick the lines you accept and confirm them together, or take them one at a time. \u2315 shows the line in the PDF.</span></div>
+      <div class="wb-scroll">
+        <table class="wbg"><thead><tr>
+          <th class="c-chk"><input type="checkbox" class="wb-chk" data-a="toggle-all" ${open.length && sel.length===open.length ? "checked":""}></th>
+          <th class="c-ln">Line</th><th>Part number</th><th>Description</th>
+          <th class="c-val">Qty ordered</th><th class="c-val">Unit price</th><th class="c-val">Promise date</th>
+        </tr></thead><tbody>
+          ${lines.map((l,li) => {
+            const ch = findChange(li);
+            const rowCls = ch ? "r-chg" : (l.uom ? "r-auto" : "r-ok");
+            const hl = S.axya.hl === li ? " r-hl" : "";
+            const canSel = ch && !S.axya.dec[key(ch)];
+            return `<tr class="${rowCls}${hl}">
+              <td class="c-chk">${canSel
+                ? `<input type="checkbox" class="wb-chk" data-a="toggle-row" data-k="${key(ch)}" ${S.axya.sel[key(ch)]?"checked":""}>`
+                : ""}</td>
+              <td class="c-ln">${l.ln}</td>
+              <td class="c-part"><button class="loupe" data-a="locate" data-li="${li}" title="Show this line in the PDF">\u2315</button>${l.part}</td>
+              <td class="c-desc">${esc(l.desc)}${l.uom ? ' <span class="autotag">AI-resolved</span>' : ""}</td>
+              <td class="c-val">${wbCell(li,"qty")}</td>
+              <td class="c-val">${wbCell(li,"price")}</td>
+              <td class="c-val">${wbCell(li,"date")}</td>
+            </tr>`;
+          }).join("")}
+        </tbody></table>
+      </div>
+      <div class="wb-foot">${done
+        ? `<b style="color:#3F7A4C">\u2713 ${done} order line${done>1?"s":""} written back to your ERP</b> \u00B7 AI can make mistakes. Reject changes that look wrong \u2014 rejections improve the model.`
+        : `AI can make mistakes. Reject changes that look wrong \u2014 rejections improve the model.`}</div>
+    </div>
+
+    <div class="wb-rail">
+      <div class="ins">
+        <div class="ins-h"><span class="spark">\u2726</span> AI Insights</div>
+        ${al ? `<div class="ins-card">
+          <div class="ins-lab">AUTO-RESOLVED (${AUTO.length})</div>
+          <div class="ins-note">No review needed. This one looks like two changes and isn't.</div>
+          <div class="ins-part">${al.part} <span class="pill green">Likely UOM difference</span></div>
+          <div class="ins-math">
+            <span>PO</span>${al.qty} \u00D7 ${money(al.price)} = ${money(al.qty*al.price)}<br>
+            <span>SUPPLIER</span>${al.ackQty} \u00D7 ${money(al.ackPrice)} = ${money(al.ackQty*al.ackPrice)} <span style="width:auto;color:#4E9A63">\u2713</span>
+          </div>
+          <div class="ins-why">Qty and price both shift by ratio 2\u00D7, but line totals agree (${money(al.qty*al.price)}). Consistent with a pack vs unit reporting difference \u2014 your order line is already right.</div>
+        </div>` : ""}
+        ${open.length ? `<div class="ins-line amber"><span>\u26A0</span><em>${open.length} simple change${open.length>1?"s":""} (qty / price / date) \u2014 review inline in the grid.</em></div>` : ""}
+        <div class="ins-line green"><span>\u2713</span>${CLEAN_LINES} other lines confirmed as-is.</div>
+        ${emailLog()}
+      </div>
+    </div>
+
+  </div>
+  </div>`;
+}
+
+function wbCell(li, field){
+  const st = S.axya.erp[PO].lines[li];
+  const show = v => field === "price" ? money(v) : String(v);
+  const d = ALL_DISC.find(x => x.li === li && x.field === field);
+  if (!d) return `<div class="wbc">${show(st[field])}<span class="tick">✓</span></div>`;
+  const dec = S.axya.dec[key(d)];
+  if (dec === "acc") return `<div class="wbc"><b>${show(d.to)}</b><span class="tick">✓</span></div>`;
+  if (dec === "rej") return `<div class="wbc">${show(d.from)}<span class="rejtag">revision asked</span></div>`;
+  const t = TIP[field](d);
+  const flag = outOfTolerance(d) ? `<br><b style="color:#F5A88F;font-weight:600;margin-top:4px">Above your 10% price tolerance.</b>` : "";
+  return `<div class="wbd tip-host">
+    <div class="wbd-pair"><span class="wbd-old">${show(d.from)}</span><span class="wbd-new">${show(d.to)}</span></div>
+    <div class="wbd-acts">
+      <button class="wbd-btn wbd-ok" data-a="accept" data-k="${key(d)}" title="Accept">✓</button>
+      <button class="wbd-btn wbd-no" data-a="reject" data-k="${key(d)}" title="Ask for a revision">✕</button>
+    </div>
+    <div class="tip"><b>${t[0]}</b>${t[1]}${flag}</div>
+  </div>`;
+}
+
+function emailLog(){
+  if (!S.axya.emails.length) return "";
+  return `<div class="wb-sent"><b>${S.axya.emails.length} revision ${S.axya.emails.length===1?"request":"requests"} sent to ${esc(SCORED[0].supplier)}</b>
+    ${S.axya.emails.map(e => esc(e)).join("<br>")}</div>`;
+}
+
+function findDisc(k){ return ALL_DISC.find(d => key(d) === k); }
+
+function decide(d, how){
+  const k = key(d);
+  if (S.axya.dec[k]) return;
+  S.axya.dec[k] = how;
+  if (how === "acc"){
+    const st = S.axya.erp[d.po].lines[d.li];
+    st[d.field] = d.to;
+    st.touched[d.field] = true;
+  } else {
+    const p = SC_BY[d.po];
+    S.axya.emails.push(p.email + " — revise " + p.po + " line " + p.lines[d.li].ln + " (" + FIELD_LABEL[d.field].toLowerCase() + ")");
+  }
+}
+
+function refreshAxya(){
+  const w = $("#axwrap"); if (w) w.innerHTML = axInner();
+  const done = Object.keys(S.axya.dec).length;
+  if (S.axya.started) $("#prog").textContent = done + " of " + TOTAL + " reviewed";
+  const b = $("#axfinish");
+  if (b && done === TOTAL){ b.disabled = false; b.style.opacity = "1"; b.textContent = "See the result"; }
+}
+
+/* ============================================================
+   LEADERBOARD STORAGE
+   Four tiers, chosen once at boot and never mixed:
+     sheet - a Google Sheet behind an Apps Script endpoint. The record.
+     live  - the artifact runtime's shared store (org-internal only)
+     local - this machine only, for an offline booth laptop
+     mem   - nothing persists (last resort)
+   ============================================================ */
+const BOARD_KEY = "axya-po-race-board";
+const MISS_PENALTY = 30000;           // 30 s added per change you did not catch
+let BOARD = [];
+let STORE = "mem";
+let DB = null;
+let unsubBoard = null;
+let pollT = null, polling = false;
+
+/* The endpoint can be set three ways, in this order of priority:
+     1. the page URL:  ...index.html?sheet=<exec url>&key=<key>
+     2. whatever was saved on this machine through the setup panel
+     3. the CONFIG block above
+   So the file itself never has to be edited. */
+const CFG_KEY = "axya-po-race-config";
+
+function loadConfig(){
+  try {
+    const q = new URLSearchParams(location.search);
+    const sheet = q.get("sheet"), k = q.get("key");
+    if (sheet){
+      CONFIG.SHEET_ENDPOINT = sheet;
+      if (k) CONFIG.KEY = k;
+      try { localStorage.setItem(CFG_KEY, JSON.stringify({SHEET_ENDPOINT:CONFIG.SHEET_ENDPOINT, KEY:CONFIG.KEY})); } catch(e){}
+      return;
+    }
+  } catch(e){}
+  try {
+    const saved = JSON.parse(localStorage.getItem(CFG_KEY) || "{}");
+    if (saved.SHEET_ENDPOINT) CONFIG.SHEET_ENDPOINT = saved.SHEET_ENDPOINT;
+    if (saved.KEY) CONFIG.KEY = saved.KEY;
+  } catch(e){}
+}
+
+async function probe(endpoint, key){
+  const url = endpoint + (endpoint.indexOf("?") < 0 ? "?" : "&") + "key=" + encodeURIComponent(key);
+  const r = await fetch(url, {method:"GET"});
+  if (!r.ok) throw new Error("The server answered " + r.status + ".");
+  let j;
+  try { j = await r.json(); }
+  catch(e){ throw new Error("That URL did not return data. Check the deployment is set to Anyone."); }
+  if (!j || !j.ok) throw new Error(j && j.error === "bad key" ? "Connected, but the key does not match the one in the script." : "The script answered with an error.");
+  return (j.board || []).length;
+}
+
+/* ---- setup panel, opened with Ctrl+Shift+K ---- */
+function openSetup(){
+  if ($("#setupwrap")) return;
+  const wrap = document.createElement("div");
+  wrap.id = "setupwrap";
+  const state = STORE === "sheet"
+      ? ['on',  'Connected to the leaderboard sheet. ' + BOARD.length + ' run' + (BOARD.length===1?'':'s') + ' on the board.']
+    : STORE === "live" ? ['on', 'Using the shared store built into this viewer.']
+    : STORE === "local" ? ['off', 'No sheet connected. Scores are saved on this machine only.']
+    : ['off', 'No sheet connected and nothing is being saved.'];
+  wrap.innerHTML = `<div class="setup-veil"><div class="setup">
+    <h2>Leaderboard setup</h2>
+    <p class="sub">Paste the web app URL from Apps Script. Run <b>showConfig</b> in the script editor to get it. This is saved on this device, so you only do it once per station.</p>
+    <div class="setup-state ${state[0]}" id="setupstate">${state[1]}</div>
+    <div class="field"><label for="cfg-url">Apps Script web app URL</label>
+      <input type="text" id="cfg-url" placeholder="https://script.google.com/macros/s/..../exec" value="${esc(CONFIG.SHEET_ENDPOINT)}"></div>
+    <div class="field"><label for="cfg-key">Key</label>
+      <input type="text" id="cfg-key" value="${esc(CONFIG.KEY)}"></div>
+    <div class="setup-row">
+      <button class="setup-btn go" data-a="setup-save">Save and connect</button>
+      <button class="setup-btn" data-a="setup-test">Test connection</button>
+      <button class="setup-btn" data-a="setup-clear">Disconnect</button>
+      <button class="setup-btn" data-a="setup-close">Close</button>
+    </div>
+    <p class="setup-hint">You can also set it from the address bar, once per station:<br>
+      <b>yourgame.pages.dev/?sheet=THE_EXEC_URL&amp;key=YOUR_KEY</b></p>
+  </div></div>`;
+  document.body.appendChild(wrap);
+  const i = $("#cfg-url"); if (i) i.focus();
+}
+
+function closeSetup(){ const w = $("#setupwrap"); if (w) w.remove(); }
+
+function setupMsg(kind, text){
+  const el = $("#setupstate");
+  if (el){ el.className = "setup-state " + kind; el.textContent = text; }
+}
+
+async function reconnect(){
+  if (pollT){ clearInterval(pollT); pollT = null; }
+  if (unsubBoard){ try { unsubBoard(); } catch(e){} unsubBoard = null; }
+  STORE = "mem"; DB = null; BOARD = [];
+  await initStore();
+}
+
+async function grab(name){
+  try {
+    if (typeof window !== "undefined" && window.claude && window.claude.use) {
+      return await window.claude.use(name);
+    }
+  } catch(e){}
+  return null;
+}
+
+/* ---- Google Sheet transport ---- */
+async function sheetGet(){
+  const url = CONFIG.SHEET_ENDPOINT + (CONFIG.SHEET_ENDPOINT.indexOf("?") < 0 ? "?" : "&")
+            + "key=" + encodeURIComponent(CONFIG.KEY);
+  const r = await fetch(url, {method:"GET"});
+  if (!r.ok) throw new Error("http " + r.status);
+  const j = await r.json();
+  if (!j || !Array.isArray(j.board)) throw new Error("bad payload");
+  return j.board;
+}
+
+async function sheetPost(entry){
+  // text/plain keeps this a simple request, so the browser skips the CORS
+  // preflight that Apps Script cannot answer.
+  const r = await fetch(CONFIG.SHEET_ENDPOINT, {
+    method: "POST",
+    headers: {"Content-Type": "text/plain;charset=utf-8"},
+    body: JSON.stringify(Object.assign({key: CONFIG.KEY}, entry))
+  });
+  if (!r.ok) throw new Error("http " + r.status);
+  return true;
+}
+
+async function refreshBoard(){
+  if (polling) return;
+  polling = true;
+  try {
+    const b = await sheetGet();
+    if (JSON.stringify(b) !== JSON.stringify(BOARD)){
+      BOARD = b;
+      if (S.screen === "board") render();
+    }
+  } catch(e){}
+  polling = false;
+}
+
+function startPolling(){
+  if (pollT) return;
+  pollT = setInterval(refreshBoard, Math.max(2000, CONFIG.POLL_MS));
+}
+
+async function initStore(){
+  if (CONFIG.SHEET_ENDPOINT){
+    try {
+      BOARD = await sheetGet();
+      STORE = "sheet";
+      startPolling();
+      if (S.screen === "board") render();
+      return;
+    } catch(e){ /* no endpoint reachable, fall through */ }
+  }
+  DB = await grab("db");
+  if (DB){ STORE = "live"; subscribeBoard(); if (S.screen === "board") render(); return; }
+  try {
+    localStorage.setItem("__axya_t","1");
+    localStorage.removeItem("__axya_t");
+    STORE = "local";
+    const raw = localStorage.getItem(BOARD_KEY);
+    const seen = new Set(BOARD.map(e => e.ts));
+    BOARD = (raw ? JSON.parse(raw) : []).concat(BOARD.filter(e => !seen.has(e.ts)));
+  } catch(e){ STORE = "mem"; }
+  if (S.screen === "board") render();
+}
+
+/* One subscription for the whole page, opened once at boot. */
+function subscribeBoard(){
+  if (unsubBoard || !DB) return;
+  try {
+    unsubBoard = DB.collection("scores").orderBy("adjMs").limit(200).onSnapshot(
+      snap => {
+        BOARD = snap.docs.map(d => Object.assign({}, d.data()));
+        if (S.screen === "board") render();
+      },
+      () => { unsubBoard = null; STORE = "local"; }
+    );
+  } catch(e){ unsubBoard = null; STORE = "local"; }
+}
+
+async function saveEntry(entry){
+  if (!BOARD.some(e => e.ts === entry.ts)) BOARD.push(entry);   // show it immediately
+  if (STORE === "sheet"){
+    try { await sheetPost(entry); setTimeout(refreshBoard, 600); return true; }
+    catch(e){ return false; }
+  }
+  if (STORE === "live" && DB){
+    const id = entry.ts + "-" + Math.random().toString(36).slice(2,8);
+    try { await DB.collection("scores").doc(id).set(entry); return true; }
+    catch(e){ return false; }
+  }
+  if (STORE === "local"){
+    try { localStorage.setItem(BOARD_KEY, JSON.stringify(BOARD)); return true; } catch(e){ return false; }
+  }
+  return false;
+}
+
+const storeLabel = () =>
+    STORE === "sheet" ? "Scores are written to the Axya leaderboard sheet and refresh live."
+  : STORE === "live"  ? "Scores update live on every station running this page."
+  : STORE === "local" ? "Scores are saved on this machine."
+  : "Scores last until this page is reloaded.";
+
+/* Round 1 is the only thing worth ranking: Axya finds every change every time.
+   Rank on time, with a 30 second penalty for each change left in the ERP. */
+const adjusted = e => e.manualMs + (e.total - e.found) * MISS_PENALTY;
+const ranked = () => BOARD.slice().sort((a,b) => adjusted(a) - adjusted(b));
+
+function buildCSV(){
+  const rows = [["Rank","Name","Email","Consent","Changes found","Total","Round 1 time (s)",
+                 "Penalty (s)","Adjusted (s)","Axya time (s)","When"]];
+  ranked().forEach((e,i) => rows.push([
+    i+1, e.name, e.email || "", e.email ? "yes" : "no",
+    e.found, e.total, (e.manualMs/1000).toFixed(1),
+    ((e.total-e.found)*MISS_PENALTY/1000).toFixed(0), (adjusted(e)/1000).toFixed(1),
+    (e.axyaMs/1000).toFixed(1), new Date(e.ts).toISOString()
+  ]));
+  return rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+}
+
+async function exportCSV(){
+  const csv = buildCSV();
+  const fname = "axya-po-race-" + new Date().toISOString().slice(0,10) + ".csv";
+  const dl = await grab("downloads");
+  if (dl){
+    try { await dl.save({filename:fname, data:csv}); toast(BOARD.length + " entries exported"); }
+    catch(e){ if (!e || e.code !== "declined") toast("Export is not available in this view"); }
+    return;
+  }
+  try {
+    const el = document.createElement("a");
+    el.href = URL.createObjectURL(new Blob([csv], {type:"text/csv"}));
+    el.download = fname;
+    el.click();
+    URL.revokeObjectURL(el.href);
+    toast(BOARD.length + " entries exported");
+  } catch(e){ toast("Export is not available in this view"); }
+}
+
+function screenFinal(){
+  stopClock();
+  const m = S.manual.ms, a = S.axya.ms;
+  const found = S.result.found, missed = TOTAL - found;
+  const x = a > 0 ? m / a : 1;
+  const saved = Math.max(0, m - a);
+  const wMax = Math.max(m, a, 1);
+  const perYear = (saved/1000) * 40 * 48 / 3600;
+  return `<div class="stage"><div class="stage-inner">
+    <p class="kicker">Result</p>
+    <div class="headline-num">${x >= 1.05 ? x.toFixed(1) + "\u00D7" : "Even"}</div>
+    <p class="headline-sub">${x >= 1.05
+      ? "faster with Axya on the same order. It also found every change, including the " + missed + " you did not."
+      : "You matched the machine on speed. It still found all " + TOTAL + " changes."}</p>
+    <div class="bars">
+      <div class="bar-row"><div class="bar-lab"><span>Your ERP and your inbox</span><b>${clock(m)}</b></div>
+        <div class="bar-track"><div class="bar-fill" style="background:var(--orange);width:${(m/wMax*100).toFixed(1)}%"></div></div></div>
+      <div class="bar-row"><div class="bar-lab"><span>Axya</span><b>${clock(a)}</b></div>
+        <div class="bar-track"><div class="bar-fill" style="background:var(--blue);width:${(a/wMax*100).toFixed(1)}%"></div></div></div>
+    </div>
+    <div class="verdict">
+      <div class="vcol without">
+        <div class="vcol-l">Without Axya</div>
+        <div class="vcol-time">${clock(m)}</div>
+        <div class="vcol-acc">${found} of ${TOTAL} changes found. ${missed
+          ? missed + " wrong " + (missed===1?"line":"lines") + " left in the ERP."
+          : "Nothing left wrong."}</div>
+      </div>
+      <div class="vcol with">
+        <div class="vcol-l">With Axya</div>
+        <div class="vcol-time">${clock(a)}</div>
+        <div class="vcol-acc"><span class="ok">${TOTAL} of ${TOTAL} changes found.</span> Every line reviewed and written back.</div>
+      </div>
+    </div>
+    <p class="lede" style="font-size:15.5px;margin-bottom:28px">You saved ${clock(saved)} on a single acknowledgement. At forty a week, that is about <b style="color:var(--dark);font-weight:700">${perYear.toFixed(0)} hours a year</b> a buyer stops spending on comparing PDFs to screens, with no silent date changes reaching your production plan.</p>
+    <div class="cta-row">
+      <button class="cta" data-a="to-signup">Put me on the leaderboard</button>
+      <button class="cta ghost" data-a="restart">No thanks</button>
+    </div>
+    <p class="fineprint">Extrapolated from your own two rounds. Straight arithmetic, no assumptions added.</p>
+  </div></div>`;
+}
+
+/* ============================================================
+   SCREEN 6 — NAME AND EMAIL
+   ============================================================ */
+function screenSignup(){
+  stopClock();
+  const found = S.result.found, missed = TOTAL - found;
+  const adj = S.manual.ms + missed * MISS_PENALTY;
+  const board = ranked();
+  const beats = board.filter(e => adjusted(e) > adj).length;
+  const standing = !board.length
+    ? "You are the first to play today."
+    : beats === board.length ? "That is the fastest run so far today."
+    : "That puts you " + (board.length - beats + 1) + " of " + (board.length + 1) + " so far today.";
+  return `<div class="stage"><div class="stage-inner">
+    <p class="kicker">Leaderboard</p>
+    <h1 class="big" style="font-size:clamp(30px,4.2vw,48px);margin-bottom:14px">${clock(adj)}</h1>
+    <p class="lede" style="margin-bottom:28px">${clock(S.manual.ms)} on the clock${missed
+      ? ", plus " + clock(missed*MISS_PENALTY) + " for the " + missed + " change" + (missed>1?"s":"") + " left wrong in the ERP"
+      : " with nothing missed"}. ${standing}</p>
+    <div class="field" id="f-name">
+      <label for="in-name">Your name</label>
+      <input type="text" id="in-name" autocomplete="name" placeholder="First and last">
+      <div class="err">Enter a name so we can put you on the board.</div>
+    </div>
+    <div class="field" id="f-email">
+      <label for="in-email">Work email</label>
+      <input type="email" id="in-email" autocomplete="email" placeholder="you@company.com">
+      <div class="err">That does not look like an email address.</div>
+    </div>
+    <label class="consent">
+      <input type="checkbox" id="in-consent" checked>
+      <span>Axya can email me my result and get in touch about order management. Untick this and we drop the address, your score still goes on the board.</span>
+    </label>
+    <div class="cta-row">
+      <button class="cta" data-a="save-score">Add my score</button>
+      <button class="cta ghost" data-a="board">See the board without me</button>
+    </div>
+    <p class="storenote">${storeLabel()}</p>
+  </div></div>`;
+}
+
+/* ============================================================
+   SCREEN 7 — LEADERBOARD
+   ============================================================ */
+function screenBoard(){
+  stopClock();
+  const board = ranked();
+  const mine = board.findIndex(e => e.ts === S.justAdded);
+  const top = board.slice(0, 10);
+  const showMine = mine >= 10 ? board[mine] : null;
+  const row = (e,i) => `<tr class="${e.ts===S.justAdded?"me":""}">
+      <td class="r-rank">${i+1}</td>
+      <td class="r-name">${esc(e.name)}</td>
+      <td class="r-num">${e.found} / ${e.total}</td>
+      <td class="r-num">${clock(e.manualMs)}</td>
+      <td class="r-num">${clock(adjusted(e))}</td>
+    </tr>`;
+  return `<div class="stage"><div class="stage-inner">
+    <p class="kicker">Today at the booth</p>
+    <h1 class="big" style="font-size:clamp(30px,4.2vw,48px);margin-bottom:14px">${
+      mine === 0 ? "You are in first." :
+      mine > 0 ? "You are number " + (mine+1) + "." : "Fastest runs so far"}</h1>
+    <p class="lede" style="margin-bottom:28px">Ranked on round one, with thirty seconds added for every change left wrong in the ERP. Fast and wrong is how a date slips into your production plan.</p>
+    ${board.length ? `<table class="board"><thead><tr>
+        <th class="r-rank">#</th><th>Name</th>
+        <th class="r-num">Found</th><th class="r-num">Time</th><th class="r-num">Adjusted</th>
+      </tr></thead><tbody>
+        ${top.map(row).join("")}
+        ${showMine ? `<tr><td colspan="5" style="border:0;padding:6px 0;color:var(--muted)">\u00B7  \u00B7  \u00B7</td></tr>` + row(showMine, mine) : ""}
+      </tbody></table>` : `<div class="board-empty">Nobody has finished a run yet.</div>`}
+    <div class="cta-row">
+      <button class="cta" data-a="restart">Next visitor</button>
+    </div>
+    <p class="storenote">${storeLabel()} ${BOARD.length} ${BOARD.length===1?"run":"runs"} recorded. Booth staff: Ctrl+Shift+E exports a CSV.</p>
+  </div></div>`;
+}
+
+/* ============================================================
+   RENDER + EVENTS
+   ============================================================ */
+function render(){
+  const app = $("#app");
+  if (S.screen === "intro")        app.innerHTML = screenIntro();
+  else if (S.screen === "manual")  { app.innerHTML = screenManual(); afterManual(); }
+  else if (S.screen === "mres")    app.innerHTML = screenManualResult();
+  else if (S.screen === "axya")    { app.innerHTML = screenAxya(); afterAxya(); }
+  else if (S.screen === "final")   app.innerHTML = screenFinal();
+  else if (S.screen === "signup")  { app.innerHTML = screenSignup(); const n = $("#in-name"); if (n) n.focus(); }
+  else if (S.screen === "board")   app.innerHTML = screenBoard();
+}
+
+function wireSearch(mode){
+  const box = $("#posearch");
+  if (box) box.addEventListener("input", e => { $("#polist").innerHTML = poRows(mode, e.target.value); });
+}
+function afterManual(){
+  if (S.manual.started) $("#prog").textContent = "No lines changed yet";
+  $("#msglist").innerHTML = msgRows();
+  wireSearch("manual");
+}
+function afterAxya(){ wireSearch("axya"); refreshAxya(); }
+
+function editedCount(){
+  return POS.filter(p => S.manual.erp[p.po].lines.some(l => Object.keys(l.touched).length)).length;
+}
+
+document.addEventListener("input", e => {
+  const f = e.target.dataset.edit;
+  if (!f) return;
+  if (S.screen === "manual" && !S.manual.started) beginRound("manual");
+  const li = +e.target.dataset.li, id = S.manual.po;
+  const st = S.manual.erp[id].lines[li];
+  st[f] = f === "date" ? e.target.value : (parseFloat(e.target.value) || 0);
+  st.touched[f] = true;
+  e.target.classList.add("touched");
+  const s = $("#erpstatus");
+  if (s) s.innerHTML = `<span class="saved">${id} line ${POBY[id].lines[li].ln} saved</span>`;
+  const n = editedCount(), pr = $("#prog");
+  if (pr) pr.textContent = n + (n === 1 ? " order changed" : " orders changed");
+});
+
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-a]");
+  if (!t) return;
+  const a = t.dataset.a;
+
+  // Nothing on the work screens is dead: touching anything starts the clock.
+  if (S.screen === "manual" && !S.manual.started) beginRound("manual");
+  if (S.screen === "axya"   && !S.axya.started)   beginRound("axya");
+
+  if (a === "start-manual"){ S.screen = "manual"; render(); }
+
+  else if (a === "run-manual"){ /* handled by beginRound above */ }
+
+  else if (a === "pick-po"){
+    const mode = t.dataset.mode, id = t.dataset.po;
+    S[mode].po = id;
+    $("#polist").innerHTML = poRows(mode, ($("#posearch")||{}).value);
+    $("#polines").innerHTML = lineRows(mode);
+    $("#polines").scrollTop = 0;
+    $("#linehead").textContent = "Order lines — " + id + " · " + POBY[id].supplier;
+  }
+
+  else if (a === "pick-msg"){
+    S.manual.msg = +t.dataset.i;
+    S.manual.read[t.dataset.i] = true;
+    $("#msglist").innerHTML = msgRows();
+    $("#msgread").innerHTML = msgRead();
+    $("#msgread").scrollTop = 0;
+    const u = INBOX.length - Object.keys(S.manual.read).length;
+    const fc = $("#foldcount"); if (fc) fc.textContent = u || "";
+    const ul = $("#olunread"); if (ul) ul.textContent = u ? u + " unread" : "No unread mail";
+  }
+
+  else if (a === "open-pdf")   $("#docslot").innerHTML = pdfSheet(+t.dataset.ack);
+  else if (a === "open-other") $("#docslot").innerHTML = decoySheet(t.dataset.kind);
+  else if (a === "close-doc")  $("#docslot").innerHTML = "";
+
+  else if (a === "finish-manual"){
+    stopClock();
+    S.manual.ms = Date.now() - S.manual.t0;
+    S.result = scoreManual();
+    S.screen = "mres"; render();
+  }
+
+  else if (a === "start-axya"){ S.screen = "axya"; render(); }
+
+  else if (a === "run-axya"){ /* handled by beginRound above */ }
+
+  else if (a === "accept" || a === "reject"){
+    const d = findDisc(t.dataset.k);
+    decide(d, a === "accept" ? "acc" : "rej");
+    S.axya.hl = d.li;
+    refreshAxya();
+    toast(a === "accept" ? "Order line updated in your ERP" : "Revision request sent to the supplier");
+  }
+
+  else if (a === "open-order"){
+    S.axya.view = "bench";
+    S.axya.viewPo = t.dataset.po;
+    S.axya.hl = null;
+    refreshAxya();
+  }
+
+  else if (a === "back-orders"){
+    S.axya.view = "orders";
+    S.axya.viewPo = null;
+    S.axya.hl = null;
+    refreshAxya();
+  }
+
+  else if (a === "toggle-row"){
+    const k = t.dataset.k;
+    S.axya.sel[k] = !S.axya.sel[k];
+    refreshAxya();
+  }
+
+  else if (a === "toggle-all"){
+    const open = openChanges(), all = open.every(d => S.axya.sel[key(d)]);
+    open.forEach(d => S.axya.sel[key(d)] = !all);
+    refreshAxya();
+  }
+
+  else if (a === "confirm-selected"){
+    const picked = openChanges().filter(d => S.axya.sel[key(d)]);
+    picked.forEach(d => decide(d, "acc"));
+    S.axya.hl = null;
+    refreshAxya();
+    toast(picked.length + " line" + (picked.length>1?"s":"") + " updated in your ERP");
+  }
+
+  else if (a === "locate"){
+    S.axya.hl = +t.dataset.li;
+    refreshAxya();
+  }
+
+  else if (a === "finish-axya"){
+    stopClock();
+    S.axya.ms = Date.now() - S.axya.t0;
+    S.screen = "final"; render();
+  }
+
+  else if (a === "to-signup"){
+    S.screen = "signup"; render();
+    if (STORE === "sheet") refreshBoard().then(() => { if (S.screen === "signup") render(); });
+  }
+
+  else if (a === "board"){ S.screen = "board"; render(); }
+
+  else if (a === "save-score"){
+    const name = $("#in-name").value.trim();
+    const email = $("#in-email").value.trim();
+    const consent = $("#in-consent").checked;
+    const okName = name.length > 0;
+    const okMail = email === "" || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+    $("#f-name").classList.toggle("bad", !okName);
+    $("#f-email").classList.toggle("bad", !okMail);
+    if (!okName){ $("#in-name").focus(); return; }
+    if (!okMail){ $("#in-email").focus(); return; }
+    S.justAdded = Date.now();
+    saveEntry({
+      ts:S.justAdded, name,
+      email:(consent && email) ? email : "",
+      found:S.result.found, total:TOTAL,
+      manualMs:S.manual.ms, axyaMs:S.axya.ms,
+      adjMs:S.manual.ms + (TOTAL - S.result.found) * MISS_PENALTY
+    }).then(ok => {
+      if (!ok && STORE !== "mem") toast("Score shown but not saved");
+      if (S.screen === "board") render();
+    });
+    S.screen = "board"; render();
+  }
+
+  else if (a === "setup-close"){ closeSetup(); }
+
+  else if (a === "setup-test"){
+    const url = $("#cfg-url").value.trim(), k = $("#cfg-key").value.trim();
+    if (!url){ setupMsg("bad", "Paste the web app URL first."); return; }
+    setupMsg("off", "Checking...");
+    probe(url, k)
+      .then(n => setupMsg("on", "Connected. The sheet currently holds " + n + " run" + (n===1?"":"s") + "."))
+      .catch(err => setupMsg("bad", err.message || "Could not reach that URL."));
+  }
+
+  else if (a === "setup-save"){
+    const url = $("#cfg-url").value.trim(), k = $("#cfg-key").value.trim();
+    if (!url){ setupMsg("bad", "Paste the web app URL first."); return; }
+    setupMsg("off", "Connecting...");
+    probe(url, k).then(async n => {
+      CONFIG.SHEET_ENDPOINT = url; CONFIG.KEY = k;
+      try { localStorage.setItem(CFG_KEY, JSON.stringify({SHEET_ENDPOINT:url, KEY:k})); } catch(e){}
+      await reconnect();
+      setupMsg("on", "Connected. The sheet currently holds " + n + " run" + (n===1?"":"s") + ".");
+      toast("Leaderboard connected");
+    }).catch(err => setupMsg("bad", err.message || "Could not reach that URL."));
+  }
+
+  else if (a === "setup-clear"){
+    try { localStorage.removeItem(CFG_KEY); } catch(e){}
+    CONFIG.SHEET_ENDPOINT = "";
+    reconnect().then(() => setupMsg("off", "Disconnected. Scores are saved on this machine only."));
+  }
+
+  else if (a === "restart"){ reset(); render(); }
+});
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape"){ closeSetup(); const d = $("#docslot"); if (d) d.innerHTML = ""; }
+  if (e.key === "Enter" && S.screen === "signup" && e.target.tagName === "INPUT"){
+    e.preventDefault();
+    const b = document.querySelector('[data-a="save-score"]');
+    if (b) b.click();
+  }
+  if (e.ctrlKey && e.shiftKey && (e.key === "K" || e.key === "k")){
+    e.preventDefault();
+    openSetup();
+  }
+  if (e.ctrlKey && e.shiftKey && (e.key === "E" || e.key === "e")){
+    e.preventDefault();
+    if (BOARD.length) exportCSV(); else toast("No scores recorded yet");
+  }
+});
+
+reset();
+loadConfig();
+render();
+initStore();
+</script>
+</body>
+</html>
