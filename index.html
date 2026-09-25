@@ -802,6 +802,15 @@
     padding:13px 15px;font-size:16px;border-radius:11px;font-family:inherit;
   }
   .field input:focus{border-color:var(--blue);outline:none;box-shadow:0 0 0 3px var(--bblue)}
+  .ev-select{
+    width:100%;background:#fff;border:1px solid var(--card-bd);color:var(--dark);
+    padding:13px 15px;font-size:16px;border-radius:11px;font-family:inherit;appearance:none;
+    background-image:linear-gradient(45deg,transparent 50%,var(--mid) 50%),linear-gradient(135deg,var(--mid) 50%,transparent 50%);
+    background-position:calc(100% - 19px) 22px,calc(100% - 14px) 22px;
+    background-size:5px 5px,5px 5px;background-repeat:no-repeat;
+  }
+  .ev-select:focus{border-color:var(--blue);outline:none;box-shadow:0 0 0 3px var(--bblue)}
+  .field.bad .ev-select{border-color:var(--red-bd);background-color:var(--red-bg)}
   .field .err{color:var(--red);font-size:12px;margin-top:6px;display:none}
   .field.bad input{border-color:var(--red-bd);background:var(--red-bg)}
   .field.bad .err{display:block}
@@ -918,6 +927,11 @@
    Paste the Apps Script /exec URL from the Google Sheet deployment.
    Leave it empty and the game runs entirely offline on this machine.
    ============================================================ */
+/* The shows this game travels to. Add or rename freely. */
+const EVENTS = ["ProcureCon East", "CHAINge", "Infor Velocity"];
+const EVENT_KEY = "axya-po-race-event";
+let EVENT = "";                       // chosen once per station, remembered
+
 const CONFIG = {
   SHEET_ENDPOINT: "https://script.google.com/a/macros/axya.co/s/AKfycbz9FbTA3d_jr--pIemmYFMInUZ4k6LSU6BAd7hz7aT61UUGEm8weIjmVx8W4HtsObg/exec",
   KEY: "axya-booth-2026",    // must match the KEY in the Apps Script
@@ -1220,6 +1234,14 @@ function screenIntro(){
     <p class="kicker">Axya booth challenge</p>
     <h1 class="big">Your suppliers changed your orders. Nobody flagged it.</h1>
     <p class="lede">An acknowledgement landed in your inbox overnight. Your ERP says one thing, the PDF says another: dates that slipped, prices that moved, quantities that shrank. None of it is marked.</p>
+    <div class="field" id="f-event" style="max-width:380px;margin-bottom:26px">
+      <label for="ev-pick">Which show are we at?</label>
+      <select id="ev-pick" class="ev-select">
+        <option value="">Choose the event</option>
+        ${EVENTS.map(n => `<option value="${esc(n)}" ${EVENT===n?"selected":""}>${esc(n)}</option>`).join("")}
+      </select>
+      <div class="err">Pick the event before you start.</div>
+    </div>
     <div class="cta-row">
       <button class="cta" data-a="start-manual">Let&rsquo;s go</button>
       <span class="fineprint" style="margin:0">Two rounds: once on your own, once with Axya.</span>
@@ -1904,6 +1926,17 @@ let pollT = null, polling = false;
    So the file itself never has to be edited. */
 const CFG_KEY = "axya-po-race-config";
 
+function loadEvent(){
+  try {
+    const q = new URLSearchParams(location.search).get("event");
+    if (q && EVENTS.indexOf(q) >= 0){ EVENT = q; localStorage.setItem(EVENT_KEY, q); return; }
+  } catch(e){}
+  try {
+    const v = localStorage.getItem(EVENT_KEY);
+    if (v && EVENTS.indexOf(v) >= 0) EVENT = v;
+  } catch(e){}
+}
+
 function loadConfig(){
   try {
     const q = new URLSearchParams(location.search);
@@ -1936,7 +1969,8 @@ function endpointVariants(u){
 }
 
 async function probeOne(endpoint, key){
-  const url = endpoint + (endpoint.indexOf("?") < 0 ? "?" : "&") + "key=" + encodeURIComponent(key);
+  const url = endpoint + (endpoint.indexOf("?") < 0 ? "?" : "&") + "key=" + encodeURIComponent(key)
+            + (EVENT ? "&event=" + encodeURIComponent(EVENT) : "");
   const r = await fetch(url, {method:"GET"});
   if (!r.ok) throw new Error("The server answered " + r.status + ".");
   let j;
@@ -2016,7 +2050,8 @@ async function grab(name){
 /* ---- Google Sheet transport ---- */
 async function sheetGet(){
   const url = CONFIG.SHEET_ENDPOINT + (CONFIG.SHEET_ENDPOINT.indexOf("?") < 0 ? "?" : "&")
-            + "key=" + encodeURIComponent(CONFIG.KEY);
+            + "key=" + encodeURIComponent(CONFIG.KEY)
+            + (EVENT ? "&event=" + encodeURIComponent(EVENT) : "");
   const r = await fetch(url, {method:"GET"});
   if (!r.ok) throw new Error("http " + r.status);
   const j = await r.json();
@@ -2256,7 +2291,7 @@ function screenBoard(){
       <td class="r-num">${clock(adjusted(e))}</td>
     </tr>`;
   return `<div class="stage"><div class="stage-inner">
-    <p class="kicker">Today at the booth</p>
+    <p class="kicker">${EVENT ? esc(EVENT) : "Today at the booth"}</p>
     <h1 class="big" style="font-size:clamp(30px,4.2vw,48px);margin-bottom:14px">${
       mine === 0 ? "You are in first." :
       mine > 0 ? "You are number " + (mine+1) + "." : "Fastest runs so far"}</h1>
@@ -2328,7 +2363,16 @@ document.addEventListener("click", e => {
   if (S.screen === "manual" && !S.manual.started) beginRound("manual");
   if (S.screen === "axya"   && !S.axya.started)   beginRound("axya");
 
-  if (a === "start-manual"){ S.screen = "manual"; render(); }
+  if (a === "start-manual"){
+    const sel = $("#ev-pick");
+    if (sel){
+      const v = sel.value;
+      if (!v){ $("#f-event").classList.add("bad"); sel.focus(); return; }
+      EVENT = v;
+      try { localStorage.setItem(EVENT_KEY, v); } catch(e){}
+    }
+    S.screen = "manual"; render();
+  }
 
   else if (a === "run-manual"){ /* handled by beginRound above */ }
 
@@ -2455,7 +2499,7 @@ document.addEventListener("click", e => {
     if (!okMail){ $("#in-email").focus(); return; }
     S.justAdded = Date.now();
     saveEntry({
-      ts:S.justAdded, name,
+      ts:S.justAdded, name, event:EVENT,
       email:(consent && email) ? email : "",
       found:S.result.found, total:TOTAL,
       manualMs:S.manual.ms, axyaMs:S.axya.ms,
@@ -2523,6 +2567,7 @@ document.addEventListener("keydown", e => {
 });
 
 reset();
+loadEvent();
 loadConfig();
 render();
 initStore();
