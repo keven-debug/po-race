@@ -956,7 +956,7 @@ const SCORED = [
       {ln:40,  part:"PL-3050", desc:"Plate, hot rolled 1/4 in, 48x96", qty:18,   price:96.50,  date:"2026-09-25",
        ackQty:18,   ackPrice:96.50,  ackDate:"2026-09-25"},
       {ln:50,  part:"AN-2020", desc:"Angle, 2 x 2 x 1/4, 6 m",         qty:40,   price:27.40,  date:"2026-09-25",
-       ackQty:80,   ackPrice:13.70,  ackDate:"2026-09-25", uom:true},
+       ackQty:40,   ackPrice:27.40,  ackDate:"2026-09-25"},
       {ln:60,  part:"TU-1140", desc:"Tube, 2 in OD x 6 m",             qty:25,   price:41.00,  date:"2026-10-02",
        ackQty:20,   ackPrice:41.00,  ackDate:"2026-10-02"},
       {ln:70,  part:"HX-8801", desc:"Hex bolt, grade 8, 1/2-13",       qty:500,  price:0.42,   date:"2026-09-22",
@@ -1298,7 +1298,7 @@ function briefAxya(){
     <h2 class="brief-h">Now let Axya read it</h2>
     <p class="brief-l">Same purchase order, same acknowledgement, same changes. The difference: the PDF was read and compared against your order lines before you sat down.</p>
     <div class="rules">
-      <div class="rule"><div class="rule-n">1</div><div class="rule-t">The parser already compared all ${SCORED[0].lines.length} lines<small>Changes are highlighted, matches are ticked, one line resolved itself.</small></div></div>
+      <div class="rule"><div class="rule-n">1</div><div class="rule-t">The parser already compared all ${SCORED[0].lines.length} lines<small>Changes are highlighted and everything that matches is ticked.</small></div></div>
       <div class="rule"><div class="rule-n">2</div><div class="rule-t">Accept a change and the order line updates itself<small>One at a time, or tick several and confirm them together.</small></div></div>
       <div class="rule"><div class="rule-n">3</div><div class="rule-t">Ask for a revision and the supplier gets an email<small>Anything outside your price tolerance is flagged.</small></div></div>
       <div class="rule"><div class="rule-n">4</div><div class="rule-t">Press Finish once the list is clear<small>Then we compare the two clocks.</small></div></div>
@@ -1792,7 +1792,7 @@ function wbInner(){
         <div class="wb-brand"><span class="spark">\u2726</span> AI Parser</div>
         ${open.length ? `<span class="pill amber">${open.length} to review</span>`
                       : `<span class="pill green">Nothing to review</span>`}
-        <span class="pill green">${AUTO.length} AI-resolved</span>
+        ${AUTO.length ? `<span class="pill green">${AUTO.length} AI-resolved</span>` : ""}
       </div>
       <div class="wb-tools">
         <button class="wb-btn" data-a="noop">Columns</button>
