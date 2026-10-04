@@ -947,36 +947,18 @@ const SCORED = [
     po:"PO-48213", supplier:"Groupe Métalika", email:"ventes@metalika.ca",
     city:"Laval, QC", ack:"AR-22910", ackDate:"2026-09-02",
     lines:[
-      {ln:10,  part:"MB-4410", desc:"Bracket, mild steel, 6 mm",       qty:250,  price:12.40,  date:"2026-09-22",
-       ackQty:250,  ackPrice:12.40,  ackDate:"2026-09-23"},
-      {ln:20,  part:"MB-4412", desc:"Bracket, mild steel, 8 mm",       qty:120,  price:15.80,  date:"2026-09-22",
-       ackQty:120,  ackPrice:15.80,  ackDate:"2026-09-22"},
-      {ln:30,  part:"WS-2201", desc:"Weld stud, M8 x 25",              qty:1000, price:0.85,   date:"2026-09-29",
-       ackQty:1000, ackPrice:0.94,   ackDate:"2026-09-29"},
-      {ln:40,  part:"PL-3050", desc:"Plate, hot rolled 1/4 in, 48x96", qty:18,   price:96.50,  date:"2026-09-25",
-       ackQty:18,   ackPrice:96.50,  ackDate:"2026-09-25"},
-      {ln:50,  part:"AN-2020", desc:"Angle, 2 x 2 x 1/4, 6 m",         qty:40,   price:27.40,  date:"2026-09-25",
-       ackQty:40,   ackPrice:27.40,  ackDate:"2026-09-25"},
-      {ln:60,  part:"TU-1140", desc:"Tube, 2 in OD x 6 m",             qty:25,   price:41.00,  date:"2026-10-02",
-       ackQty:20,   ackPrice:41.00,  ackDate:"2026-10-02"},
-      {ln:70,  part:"HX-8801", desc:"Hex bolt, grade 8, 1/2-13",       qty:500,  price:0.42,   date:"2026-09-22",
-       ackQty:500,  ackPrice:0.42,   ackDate:"2026-09-22"},
-      {ln:80,  part:"NU-8802", desc:"Nylon lock nut, 1/2-13",          qty:500,  price:0.18,   date:"2026-09-22",
-       ackQty:500,  ackPrice:0.18,   ackDate:"2026-09-22"},
-      {ln:90,  part:"FW-8803", desc:"Flat washer, hardened",           qty:1000, price:0.09,   date:"2026-09-22",
-       ackQty:1000, ackPrice:0.09,   ackDate:"2026-09-22"},
-      {ln:100, part:"GK-4420", desc:"Gasket, compressed fibre",        qty:150,  price:3.35,   date:"2026-10-06",
-       ackQty:150,  ackPrice:3.35,   ackDate:"2026-10-06"},
-      {ln:110, part:"BU-6610", desc:"Bronze bushing, flanged",         qty:40,   price:14.25,  date:"2026-10-06",
-       ackQty:40,   ackPrice:14.25,  ackDate:"2026-10-06"},
-      {ln:120, part:"SE-6620", desc:"Rotary shaft seal, 45 mm",        qty:75,   price:9.60,   date:"2026-10-06",
-       ackQty:75,   ackPrice:9.60,   ackDate:"2026-10-06"},
-      {ln:130, part:"CI-9910", desc:"Casting, ductile iron",           qty:15,   price:203.50, date:"2026-11-03",
-       ackQty:15,   ackPrice:203.51, ackDate:"2026-11-03"},
-      {ln:140, part:"PR-7710", desc:"Primer, grey, 20 L",              qty:6,    price:148.00, date:"2026-10-13",
-       ackQty:6,    ackPrice:148.00, ackDate:"2026-10-13"},
-      {ln:150, part:"TL-7720", desc:"Threadlocker, 250 ml",            qty:24,   price:31.20,  date:"2026-10-13",
-       ackQty:24,   ackPrice:31.20,  ackDate:"2026-10-13"}
+      {ln:10, part:"MB-4410", desc:"Bracket, mild steel, 6 mm",       qty:250,  price:12.40, date:"2026-09-22",
+       ackQty:250,  ackPrice:12.40, ackDate:"2026-09-23"},
+      {ln:20, part:"MB-4412", desc:"Bracket, mild steel, 8 mm",       qty:120,  price:15.80, date:"2026-09-22",
+       ackQty:120,  ackPrice:15.80, ackDate:"2026-09-22"},
+      {ln:30, part:"WS-2201", desc:"Weld stud, M8 x 25",              qty:1000, price:0.85,  date:"2026-09-29",
+       ackQty:1000, ackPrice:0.94,  ackDate:"2026-09-29"},
+      {ln:40, part:"PL-3050", desc:"Plate, hot rolled 1/4 in, 48x96", qty:18,   price:96.50, date:"2026-09-25",
+       ackQty:18,   ackPrice:96.50, ackDate:"2026-09-25"},
+      {ln:50, part:"AN-2020", desc:"Angle, 2 x 2 x 1/4, 6 m",         qty:40,   price:27.40, date:"2026-09-25",
+       ackQty:40,   ackPrice:27.40, ackDate:"2026-09-25"},
+      {ln:60, part:"TU-1140", desc:"Tube, 2 in OD x 6 m",             qty:25,   price:41.00, date:"2026-10-02",
+       ackQty:25,   ackPrice:41.00, ackDate:"2026-10-02"}
     ]
   }
 ];
@@ -1138,16 +1120,18 @@ function blankERP(){
 
 /* Everything that arrived before the acknowledgement has already been read,
    so the one that matters is the only unread line in the list. */
+/* The acknowledgement is opened for the player, so nothing is unread. */
 function seedRead(){
   const r = {};
-  INBOX.forEach((m,i) => { if (m.ackIdx === undefined) r[i] = true; });
+  INBOX.forEach((m,i) => r[i] = true);
   return r;
 }
+const ACK_MSG = INBOX.findIndex(m => m.ackIdx !== undefined);
 
 function reset(){
   S = {
     screen:"intro",
-    manual:{erp:blankERP(), po:null, msg:null, read:seedRead(), tab:"mail", started:false, t0:0, ms:0},
+    manual:{erp:blankERP(), po:PO, msg:ACK_MSG, read:seedRead(), tab:"mail", started:false, t0:0, ms:0},
     axya:{erp:blankERP(), po:null, dec:{}, sel:{}, hl:null, view:"orders", viewPo:null, tab:"grid", started:false, t0:0, ms:0, emails:[]},
     result:null
   };
@@ -1278,10 +1262,10 @@ function briefManual(){
   return `<div class="brief-veil"><div class="brief">
     <p class="kicker" style="margin-bottom:12px">Round 1: the way it works today</p>
     <h2 class="brief-h">Here is the job</h2>
-    <p class="brief-l">Your ERP is on the left, this morning&rsquo;s inbox on the right. A supplier has acknowledged one of your orders and quietly changed part of it.</p>
+    <p class="brief-l">A supplier has acknowledged your order and quietly changed part of it. Your order is open on the left, their acknowledgement on the right.</p>
     <div class="rules">
-      <div class="rule"><div class="rule-n">1</div><div class="rule-t">Find the acknowledgement in the inbox<small>It is the only unread message in the list.</small></div></div>
-      <div class="rule"><div class="rule-n">2</div><div class="rule-t">Open the attachment, compare it against the order in the ERP<small>Line by line: quantity, unit price, delivery date.</small></div></div>
+      <div class="rule"><div class="rule-n">1</div><div class="rule-t">Everything is already open<small>Your order is on the left, the supplier&rsquo;s acknowledgement on the right.</small></div></div>
+      <div class="rule"><div class="rule-n">2</div><div class="rule-t">Compare the two, line by line<small>Quantity, unit price, delivery date. Some lines match, some do not.</small></div></div>
       <div class="rule"><div class="rule-n">3</div><div class="rule-t">Correct the ERP to match what the supplier confirmed<small>Click a line and edit it in place.</small></div></div>
       <div class="rule"><div class="rule-n">4</div><div class="rule-t">Press Finish when you think you are done<small>We show you the clock, and what you missed.</small></div></div>
     </div>
@@ -2332,6 +2316,17 @@ function afterManual(){
   if (S.manual.started) $("#prog").textContent = "No lines changed yet";
   $("#msglist").innerHTML = msgRows();
   wireSearch("manual");
+  // Nothing to hunt for: the order is open on the left, the PDF on the right.
+  const lh = $("#linehead");
+  if (lh && S.manual.po) lh.textContent = "Order lines \u2014 " + S.manual.po + " \u00B7 " + POBY[S.manual.po].supplier;
+  const lines = $("#polines");
+  if (lines && S.manual.po) lines.innerHTML = lineRows("manual");
+  const read = $("#msgread");
+  if (read && S.manual.msg !== null) read.innerHTML = msgRead();
+  const slot = $("#docslot");
+  if (slot && S.manual.msg !== null && INBOX[S.manual.msg].ackIdx !== undefined){
+    slot.innerHTML = pdfSheet(INBOX[S.manual.msg].ackIdx);
+  }
 }
 function afterAxya(){ wireSearch("axya"); refreshAxya(); }
 
